@@ -40,8 +40,11 @@ const GHOST_NO := Color(0.482, 0.173, 0.749, 0.45)  # storm purple
 
 
 func _ready() -> void:
-	add_to_group("player")
 	add_to_group("fighter")
+	# Nobody controls this player until we know it is yours (see become_local).
+	camera.current = false
+	set_physics_process(false)
+	set_process_unhandled_input(false)
 	# The selfie stick must not bump into your own body.
 	spring_arm.add_excluded_object(get_rid())
 	# The ghost wall is one build square wide and tall.
@@ -52,6 +55,27 @@ func _ready() -> void:
 	# Start high in the sky and glide down.
 	global_position.y = Tune.drop_height
 	gliding = true
+
+
+## True if this player is the one you control.
+var is_local := false
+
+
+## This player is yours: read your controls and look through its camera.
+## Other people's players stay still here; their own game moves them.
+func become_local() -> void:
+	is_local = true
+	add_to_group("player") # The HUD shows the "player" group: only you.
+	camera.make_current()
+	set_physics_process(true)
+	set_process_unhandled_input(true)
+	set_process(false)
+
+
+func _process(_delta: float) -> void:
+	# Online: wait until the host says this player is yours.
+	if not is_local and not is_out and Net.online and Net.is_mine(self):
+		become_local()
 
 
 ## When you are out: hide your body and stop moving. The camera stays.

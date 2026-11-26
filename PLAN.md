@@ -13,7 +13,8 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G3b Bots + win | G3a | `scenes/bot.tscn`, `scripts/bot.gd`, `scripts/health.gd`, `scripts/game.gd`, `scenes/main.tscn`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd` | 3 bots roam and fight; you win when last one left, lose at 0 HP |
 | ✓ | B1 Build | G4 | `scripts/player.gd`, `scenes/player.tscn`, `scenes/wall.tscn`, `scripts/wall.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `scripts/tune.gd`, `project.godot`, `scenes/main.tscn`, `DESIGN.md`, `PLAN.md` | You harvest material, build green/red-checked walls on the grid, and a wall blocks bullets until it breaks |
 | ✓ | G4 Storm | G3 | `scripts/storm.gd`, `scenes/main.tscn`, `scripts/tune.gd`, `scripts/bot.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `PLAN.md` | Storm waits, shrinks to 0, hurts anyone outside (more as it shrinks), bots run inside, HUD shows the timer |
-|  | G5 Online | G4 | `scripts/net.gd` | — |
+| ✓ | G5a Lobby + see each other | G4, B1, GD-Sync docs | `scripts/net.gd`, `scenes/lobby.tscn`, `scripts/lobby.gd`, `scripts/game.gd`, `scripts/player.gd`, `scenes/player.tscn`, `scenes/main.tscn`, `project.godot`, `PLAN.md` | 2 windows join the same 4-digit room and see each other run and glide |
+|  | G5b Host runs the match | G5a | `scripts/net.gd`, `scripts/game.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/chest.gd`, `scripts/player.gd`, `scripts/health.gd`, `scripts/wall.gd`, scenes, `PLAN.md`, `DESIGN.md` | 2 windows see the same bots, storm, chests; shots and walls work for both; one shared winner |
 |  | G6 Flow + sound + touch | G5 | screens, `tools/make_sfx.py`, touch | — |
 |  | G7 Ship | G6 | title, icon, `CHANGELOG.md`, `v0.1.0` | — |
 
@@ -63,6 +64,20 @@ G2 core loop: island, player, movement, camera, glide start.
 4. Ghost green / red
 5. Place wall: −10 material, 150 HP, blocks bullets
 6. Tune pass
+
+### G5a steps
+1. `net.gd`: local mode in the editor, online mode in builds; "Connecting…" → "Connected"
+2. Lobby screen: Host (4-digit code), Join (type code), Solo
+3. One player per person; you only move your own player and camera
+4. Movement sync, 20 per second, smoothed
+
+### G5b steps
+5. Host runs bots + storm; others copy
+6. Chests: hold E asks the host; host opens for everyone
+7. Shots: "I hit X" goes to the host; host takes the HP
+8. Walls: build asks the host; host places for everyone
+9. Win / lose: host decides; each screen shows its own place
+10. 2-window test + Tune pass
 
 ## Bugs
 - Bots don't path around built walls (map is baked at start). Fix with the smart bots card.

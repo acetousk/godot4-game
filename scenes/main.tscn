@@ -1,6 +1,5 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=35 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/chest.tscn" id="2_chest"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_hud"]
 [ext_resource type="Script" path="res://scripts/game.gd" id="4_game"]
@@ -533,8 +532,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.2, 6)
 [node name="Chest6" parent="Chests" instance=ExtResource("2_chest")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.2, -30)
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+[node name="Players" type="Node3D" parent="."]
 
 [node name="Storm" type="Node3D" parent="."]
 script = ExtResource("5_storm")

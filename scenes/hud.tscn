@@ -80,6 +80,14 @@ horizontal_alignment = 2
 text = "Storm in 0:45"
 label_settings = SubResource("text")
 
+[node name="NetStatus" type="Label" parent="."]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 624.0
+offset_bottom = 68.0
+text = "Not connected"
+label_settings = SubResource("text")
+
 [node name="StormWarning" type="Label" parent="."]
 anchors_preset = 5
 anchor_left = 0.5
