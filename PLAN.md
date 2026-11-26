@@ -20,6 +20,7 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G6b Touch | G6a | `scenes/touch.tscn`, `scripts/touch.gd`, `scenes/hud.tscn`, `scripts/player.gd`, `scripts/tune.gd` | With `force_touch` on, you play a full match with only the mouse as a finger |
 |  | G7 Ship | G6, kid's fix | `project.godot`, `icon.svg`, `scenes/bot.tscn`, `DESIGN.md`, `CHANGELOG.md`, `README.md`, `PLAN.md`, tag `v0.2.0` | `v0.2.0` builds on GitHub; Solo runs smoothly on the web and the kid's phone |
 | ✓ | F1 Hide online status in solo | Kid's bug report (v0.2.0) | `scripts/hud.gd`, `CHANGELOG.md`, `PLAN.md` | Solo shows no status line; online matches and the start screen still do |
+| ✓ | F2 No key errors in local mode | Kid's bug report, `RequestProcessor.gd:273` | `scripts/health.gd`, `scripts/storm.gd`, `CHANGELOG.md`, `PLAN.md` | 2-window Output has no "Key must not be empty"; net test all ✅ (kid tested 2 windows: clean and working; net test could not run: joiner never found the room, likely the test terminal blocks local broadcasts, not proven; kid chose to ship v0.2.2 on the 2-window test) |
 
 ### G2a steps
 1. `PLAN.md` + `Tune` autoload
@@ -115,7 +116,8 @@ G2 core loop: island, player, movement, camera, glide start.
 1. Hide the online status line in solo matches (start screen keeps it)
 
 ## Bugs
-- Local mode floods Output with "Key must not be empty" (GD-Sync `_unreliable_mac` has no key in local mode; packets still work). Fix idea: send synced spots reliably in local mode only.
+- Fixed (F2, v0.2.2): local mode flooded Output with "Key must not be empty" (GD-Sync `_unreliable_mac` has no key in local mode). MoveSync + StormSync now reliable in local mode only.
 - Fixed (T1): joiner's chest/wall requests were lost. GD-Sync's send-to-one-player keeps only 30 bits of the host's ID. Now `Net.tell_host` sends to everyone and only the host acts.
 - Fixed (T1): joiner never got control of their player. The host said "this one is yours" before the player existed on the joiner's screen. Now the host waits 1 s first.
+- Open (v0.2.2 ship): `net_test.py` fails 5/5: "No room NNNN" on the joiner. GD-Sync local mode finds rooms by UDP broadcast; the broadcast check could not run (permission denied). Recheck before the next ship.
 - Bots don't path around built walls (map is baked at start). Fix with the smart bots card.

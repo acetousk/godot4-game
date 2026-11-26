@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.2 — 2026-11-25
+
+- Fixed: local-mode tests (2 windows) filled Output with "Key must not be empty". Player, bot, and storm syncs now send the sure way in local mode.
+
 ## v0.2.1 — 2026-11-25
 
 - Fixed: in solo, the top left said "Connecting…" / "Could not connect" all match. Now it only shows in online matches.

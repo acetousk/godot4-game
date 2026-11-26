@@ -17,6 +17,8 @@ var tick := 0.0
 
 func _ready() -> void:
 	add_to_group("storm")
+	# Local mode has no key for quick messages: send the storm the sure way there.
+	$StormSync.reliable = Net.is_local()
 	# Pick a middle near the center of the island, different each match.
 	center = Vector2(randf_range(-20.0, 20.0), randf_range(-20.0, 20.0))
 	radius = Tune.storm_start_radius

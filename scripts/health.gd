@@ -23,6 +23,9 @@ func _enter_tree() -> void:
 	if move_sync:
 		move_sync.refresh_rate = Tune.net_send_rate
 		move_sync.interpolation_speed = float(Tune.net_send_rate)
+		# Local mode has no key, and GD-Sync's quick (unreliable) messages need one
+		# (else: thousands of "Key must not be empty" errors). Use sure messages there.
+		move_sync.reliable = Net.is_local()
 
 
 ## Call this from _ready: lets the host tell every screen that I am out.
