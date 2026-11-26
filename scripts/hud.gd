@@ -26,6 +26,8 @@ func show_end(title: String, stats: String, hint: String) -> void:
 func _process(_delta: float) -> void:
 	# Everyone still in the match is in the "fighter" group.
 	left_label.text = "Players left %d" % get_tree().get_nodes_in_group("fighter").size()
+	# Online status: only in online matches (solo does not need the network).
+	$NetStatus.visible = Net.online
 	$NetStatus.text = Net.status
 
 	# Storm timer, and a warning when you stand outside the circle.

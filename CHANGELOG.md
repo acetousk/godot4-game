@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1 — not released yet
+
+- Fixed: in solo, the top left said "Connecting…" / "Could not connect" all match. Now it only shows in online matches.
+
 ## v0.2.0 — 2026-11-25 — Stormring, first playable
 
 (v0.1.x were an earlier game in this repo.)
