@@ -6,6 +6,20 @@ extends Node
 ## How long one step slides, in seconds. Smaller = snappier.
 @export var move_time: float = 0.06
 
+# --- Player ---
+## HP at the start of a run.
+@export var player_hp: int = 20
+## XP needed for level 2, 3 and 4.
+@export var level_xp: Array[int] = [10, 25, 45]
+
+# --- Potions ---
+## HP a Healing potion gives back.
+@export var heal_amount: int = 10
+## Damage an Embers potion does to you.
+@export var embers_self_damage: int = 4
+## Damage an Embers potion does to each monster next to you.
+@export var embers_monster_damage: int = 6
+
 # --- Seeing ---
 ## How many tiles your lantern lets you see.
 @export var sight_radius: int = 6

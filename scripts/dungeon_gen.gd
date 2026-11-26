@@ -88,6 +88,17 @@ func _place_start_and_goal(rng: RandomNumberGenerator) -> void:
 	goal = _random_spot(rng, rooms[goal_cell])
 
 
+## A random floor tile in any room that isn't the start, the goal, or in `taken`.
+func random_free_spot(rng: RandomNumberGenerator, taken: Dictionary) -> Vector2i:
+	var cells: Array = rooms.keys()
+	while true:
+		var room: Rect2i = rooms[cells[rng.randi_range(0, cells.size() - 1)]]
+		var p := _random_spot(rng, room)
+		if p != start and p != goal and not taken.has(p):
+			return p
+	return start  # Never reached.
+
+
 func _random_spot(rng: RandomNumberGenerator, room: Rect2i) -> Vector2i:
 	return Vector2i(
 		rng.randi_range(room.position.x, room.end.x - 1),
@@ -121,7 +132,7 @@ func _place_rooms(rng: RandomNumberGenerator) -> void:
 	for y in GRID:
 		for x in GRID:
 			cells.append(Vector2i(x, y))
-	_shuffle(cells, rng)
+	shuffle(cells, rng)
 
 	# Keep the first 6-9 of them, and put a room in each.
 	var count := rng.randi_range(Tune.rooms_min, mini(Tune.rooms_max, GRID * GRID))
@@ -158,7 +169,7 @@ func _carve(room: Rect2i) -> void:
 ## Then add 1-2 extra hallways, so there is sometimes more than one way around.
 func _join_rooms(rng: RandomNumberGenerator) -> void:
 	var cells: Array = rooms.keys()
-	_shuffle(cells, rng)
+	shuffle(cells, rng)
 	var joined: Array = [cells.pop_back()]
 	var links := {}
 
@@ -185,7 +196,7 @@ func _join_rooms(rng: RandomNumberGenerator) -> void:
 		for b in rooms:
 			if a < b and _grid_dist(a, b) == 1 and not links.has(_link_key(a, b)):
 				pairs.append([a, b])
-	_shuffle(pairs, rng)
+	shuffle(pairs, rng)
 	for i in mini(extras, pairs.size()):
 		_dig_hallway(rng, rooms[pairs[i][0]], rooms[pairs[i][1]])
 
@@ -217,7 +228,7 @@ func _link_key(a: Vector2i, b: Vector2i) -> String:
 
 
 ## Mixes up an array using our rng (so a seed always gives the same cave).
-func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
+static func shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
 	for i in range(arr.size() - 1, 0, -1):
 		var j := rng.randi_range(0, i)
 		var tmp = arr[i]

@@ -19,6 +19,16 @@ var cell: Vector2i
 var gen: DungeonGen
 ## True while sliding. No new step until the slide is done.
 var busy := false
+## False when the run is over (win or lose): no more moving.
+var active := true
+
+# --- Stats ---
+var max_hp := Tune.player_hp
+var hp := Tune.player_hp
+var level := 1
+var xp := 0
+## Potions you carry (Potions.Kind), up to 4.
+var potions: Array[int] = []
 
 
 ## Puts the player on a tile right away (no slide).
@@ -32,7 +42,7 @@ static func cell_to_pos(c: Vector2i) -> Vector2:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if busy:
+	if busy or not active:
 		return
 	for action in DIRS:
 		# true = holding the key keeps walking
