@@ -13,13 +13,13 @@
 | Move | WASD | Left stick | Left stick |
 | Look | Mouse | Right stick | Drag right side |
 | Jump | Space | A | Jump button |
-| Fire / harvest | Left click | RT | Fire button |
-| Aim | Right click | LT | Aim button |
-| Pickaxe / rifle | 1 / 2 | D-pad left / right | Slot buttons |
+| Fire / harvest | Left click | RT | FIRE button |
+| Aim | Right click | LT | — (no aim on touch) |
+| Pickaxe / rifle | 1 / 2 | D-pad left / right | Auto: pickaxe when close to a tree, rock, or house |
 | Reload | R (or auto when empty) | RB | Auto when empty |
-| Build mode | Q | Y | Build button |
-| Action (open chest) | Hold E | X | Action button |
-| Heal | H | B | Heal button |
+| Build mode | Q | Y | BUILD button |
+| Action (open chest) | Hold E | X | Hold USE button |
+| Heal | H | B | HEAL button |
 
 ## Win and lose
 - **Win:** last one standing
@@ -41,7 +41,7 @@
 - **Chests:** 6 chests (hold E 0.5 s): Burst rifle + 1 heal kit (+50 HP, 3 s, max 2)
 - **Health:** 100 HP, no shield
 - **Storm:** 1 phase. Waits 35 s, shrinks from 80 m to 0 over 90 s. Outside hurts 2 → 10 HP/s as it shrinks
-- **Bots:** 3 bots. Roam inside the circle (NavigationAgent3D), shoot on sight (raycast 50 m, 20% accuracy far → 60% near). They fight each other too.
+- **Bots:** 3 bots. Roam inside the circle (NavigationAgent3D), shoot on sight (raycast 50 m, 20% accuracy far → 60% near). They fight each other too. Bots are Water teal, players are Dark (purple is only for the storm).
 - **HUD:** HP, material, ammo, players left, storm timer, crosshair
 - **Screens:** start ("Click or tap to start"), end (place, eliminations, time)
 

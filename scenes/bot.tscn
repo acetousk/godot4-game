@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://addons/GD-Sync/Scripts/Types/PropertySynchronizer.gd" id="2_sync"]
 
 [sub_resource type="StandardMaterial3D" id="body_mat"]
-albedo_color = Color(0.482, 0.173, 0.749, 1)
+albedo_color = Color(0.165, 0.616, 0.561, 1)
 
 [sub_resource type="CapsuleMesh" id="body_mesh"]
 material = SubResource("body_mat")

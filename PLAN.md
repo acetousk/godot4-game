@@ -18,7 +18,7 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | T1 Net test | G5b | `tools/net_test.py`, `tools/net_test.gd`, `scripts/net.gd` | `python3 tools/net_test.py` prints a ✅/❌ list comparing host and joiner |
 | ✓ | G6a Flow + sound | G5b, `DESIGN.md` | `tools/make_sfx.py`, `sounds/*.wav`, `scripts/sfx.gd`, `scripts/player.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/wall.gd`, `scripts/game.gd`, `scripts/tune.gd`, `project.godot`, `CREDITS.md` | 3 rounds in a row work, you hear all 5 sounds, silent until the first click |
 | ✓ | G6b Touch | G6a | `scenes/touch.tscn`, `scripts/touch.gd`, `scenes/hud.tscn`, `scripts/player.gd`, `scripts/tune.gd` | With `force_touch` on, you play a full match with only the mouse as a finger |
-|  | G7 Ship | G6 | title, icon, `CHANGELOG.md`, `v0.1.0` | — |
+|  | G7 Ship | G6, kid's fix | `project.godot`, `icon.svg`, `scenes/bot.tscn`, `DESIGN.md`, `CHANGELOG.md`, `README.md`, `PLAN.md`, tag `v0.2.0` | `v0.2.0` builds on GitHub; Solo runs smoothly on the web and the kid's phone |
 
 ### G2a steps
 1. `PLAN.md` + `Tune` autoload
@@ -101,6 +101,14 @@ G2 core loop: island, player, movement, camera, glide start.
 9. Buttons: Fire, Jump, Build, Use, Heal
 10. Auto-pickaxe (touch): fire at tree/rock/house swings the pickaxe
 11. Full match; kid names one fix (→ G7). Kid said "ok": no fix named.
+
+### G7 steps
+1. Title "My Game" → "Stormring"
+2. Icon: purple storm ring around a green island (`icon.svg`)
+3. The fix: bots Water teal `#2A9D8F` (kid: "bots look like the storm far away")
+4. `CHANGELOG.md` + `README.md`
+5. Ask, then tag `v0.2.0` (v0.1.x tags are from the kid's first game)
+6. Kid checks speed: web link + phone
 
 ## Bugs
 - Local mode floods Output with "Key must not be empty" (GD-Sync `_unreliable_mac` has no key in local mode; packets still work). Fix idea: send synced spots reliably in local mode only.

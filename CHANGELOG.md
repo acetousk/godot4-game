@@ -1,0 +1,19 @@
+# Changelog
+
+## v0.2.0 — 2026-11-25 — Stormring, first playable
+
+(v0.1.x were an earlier game in this repo.)
+
+- Island with water, box buildings, trees, rocks, and 6 chests
+- Glide down from 80 m, run, jump, third-person camera with aim zoom
+- Burst rifle, reload, heal kits, pickaxe harvesting
+- Build walls on a 4 m grid (green = OK, purple = can't); walls block shots and can break
+- 3 bots that roam, shoot, and fight each other (now teal, so they don't look like the storm)
+- Purple storm: waits 35 s, shrinks over 90 s, hurts more as it shrinks
+- Win / lose screen with place, eliminations, and time; play again or go back to the start screen
+- Start screen: Solo, Host (4-digit room code), Join
+- Online with GD-Sync (local mode in the editor): the host runs bots, storm, chests, walls, and who wins
+- `tools/net_test.py`: an automatic host-vs-joiner check
+- 5 sounds made by `tools/make_sfx.py`; silent until your first click or tap
+- Touch controls on phones: left stick, drag to look, FIRE / JUMP / BUILD / USE / HEAL, auto-pickaxe
+- Stormring title and icon
