@@ -50,21 +50,22 @@ Not in `DESIGN.md`? Ask: add it now, or put it in "Not in v1.0"?
 7. After the last step, check "Done when", tick the card, and say "Commit now."
 
 ## 5. A new game: the first playable
-Budget: about 60 minutes of your work, about 50 steps. Result: start → play → win or lose → play again, with sound, on all 4 platforms.
+Budget: about 75 minutes of your work, about 65 steps. Result: start → play → win or lose → play again, with sound, online with 2–4 players, on all 4 platforms.
 
 | Card | Budget | Steps |
 |---|---|---|
-| G1 Design + scope | 5 min | One question at a time: 2D or 3D, what you are, how you move, main action, win, lose, a palette from 3 choices → `DESIGN.md`. Then count the steps for G2–G6. Over the budget → the kid cuts. |
+| G1 Design + scope | 5 min | One question at a time: 2D or 3D, what you are, how you move, main action, win, lose, what the host runs online, a palette from 3 choices → `DESIGN.md`. Then count the steps for G2–G7. Over the budget → the kid cuts. |
 | G2 Core loop | 15 min | World → `Tune` → player → movement → main action → camera → tune → stay inside the play area |
 | G3 Goal | 10 min | One goal → progress display → enough for 1–3 minutes → win → a small effect |
 | G4 Pressure | 10 min | One threat → its cost + a short safe time → display → lose → a 2nd threat or more speed → tune |
-| G5 Flow + sound + touch | 12 min | Start screen ("Click or tap to start") → end screen → play again 3 times → touch controls → `tools/make_sfx.py` → sounds in the game → the kid plays a full game and names one fix |
-| G6 Ship | 8 min | Title + icon → the fix → web/phone speed check → `CHANGELOG.md` → ask to tag `v0.1.0` |
+| G5 Online | 15 min | The kid installs GD-Sync → `scripts/net.gd` in local mode → host or join a room by a 4-digit code → sync the players → the host runs the game state → a 2-instance test. The online test with a key comes after `v0.1.0`. |
+| G6 Flow + sound + touch | 12 min | Start screen ("Click or tap to start") → end screen → play again 3 times → touch controls → write `tools/make_sfx.py` (WAV) → sounds in the game → the kid plays a full game and names one fix |
+| G7 Ship | 8 min | Title + icon → the fix → `CHANGELOG.md` → ask to tag `v0.1.0` → the kid checks speed on the web link and the phone |
 
-First playable: single player only, with no animation, saving, or extra levels.
+First playable: no animation, saving, or extra levels.
 Over the budget? Skip the tune and effect steps.
 
-Later milestones: when the kid names a goal ("feels good", "online", "more levels", "polish", "launch"), make cards for this game. Use sections 2–4.
+Later milestones: when the kid names a goal ("feels good", "online with a key", "more levels", "polish", "launch"), make cards for this game. Use sections 2–4.
 
 ## 6. A feeling: the tune loop
 1. Name 1–3 `Tune` values that can cause the feeling, and why. No value fits? Make a card instead.

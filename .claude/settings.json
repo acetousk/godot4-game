@@ -8,9 +8,9 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git tag --sort:*)",
-      "Bash(python tools/:*)",
-      "Bash(python3 tools/:*)",
-      "Bash(py tools/:*)"
+      "Bash(python tools/*)",
+      "Bash(python3 tools/*)",
+      "Bash(py tools/*)"
     ],
     "ask": [
       "Bash(git push:*)",
@@ -24,7 +24,8 @@
       "Edit(export_presets.cfg)",
       "Read(**/*.keystore)",
       "Read(**/*.b64)",
-      "Read(export_credentials.cfg)"
+      "Read(export_credentials.cfg)",
+      "Read(addons/GD-Sync/keys.cfg)"
     ],
     "defaultMode": "plan"
   }
