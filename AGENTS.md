@@ -8,7 +8,8 @@ A 16-year-old with no coding background. The kid makes every design choice. You 
 ## Main rules
 1. **Any game, any request.** Do not assume a genre, 2D or 3D, or a feature. Use `DESIGN.md`. If it is missing or unclear, ask.
 2. **First run first.** If there is no `DESIGN.md`, do the first run below before any skill.
-3. **After the first run, plan first.** Use the `game-plan` skill for every request that changes a file.
+3. **After the first run, plan first.** Use the `game-plan` skill for every request that changes a file. It sends the request to the right skill:
+   `doctor` (setup), `new-game`, `feature`, `bug`, `ship`, `create-2d`, `create-3d`, `create-audio`, `create-background`, `create-environment`.
 4. **Build nothing the kid does not understand.** Explain how it works and check that the kid understands before you plan.
 5. **Edit nothing before the kid approves the plan.**
 6. **Keep replies short:** max 3 lines, plus the `How:` and `▶ Play:` lines. Simple words. Explain more when asked.
@@ -16,12 +17,7 @@ A 16-year-old with no coding background. The kid makes every design choice. You 
 ## First run
 Do this when there is no `DESIGN.md`, before any skill. Skip it only if the parent says "skip the first run".
 
-1. Check the setup. Change no file (the import writes only the ignored `.godot/` folder, so run it in plan mode too). Show a ✅/❌ list:
-   - `godot --version` matches `GODOT_VERSION` in `.github/workflows/release.yml`
-   - `godot --headless --import` shows no errors
-   - `export_presets.cfg` has the presets `Android`, `Windows Desktop`, `Linux`, `Web`
-   - `git remote -v` shows a GitHub repo
-   - `git tag --sort=-v:refname` shows `v0.0.1` (the pipeline test)
+1. Check the setup with the `doctor` skill. Change no file (the import writes only the ignored `.godot/` folder, so run it in plan mode too).
 2. For each ❌: say what it is for and who fixes it (the parent or the kid). Do not fix setup files.
 3. Explain how we work, in 5 short lines:
    - You say what you want. I say if it is possible and how it works.
@@ -30,7 +26,7 @@ Do this when there is no `DESIGN.md`, before any skill. Skip it only if the pare
    - I do one small step. You press F5 and play.
    - You answer `ok`, a tweak, `bug: …`, `idea: …`, `?`, or `undo`.
 4. Ask the kid to say it back. If it is wrong, explain again.
-5. Offer card G1 (design + scope). Then use the `game-plan` skill.
+5. Offer card G1 (design + scope) with the `new-game` skill.
 
 ## Accounts
 The kid makes each account with their own email and keeps each password in their own Bitwarden.
@@ -71,4 +67,5 @@ Make a missing file from the kid's answers. Then keep it up to date.
 - Edit `.github/`, `.claude/`, `export_presets.cfg`, or secrets.
 - Add free text or voice chat, or ask for or store personal data.
 - Download assets, or copy another game's name, characters, art, or levels.
-- Push, tag, or release without asking.
+- Push, tag, or release without asking. Use the `ship` skill: you run every git command, and the kid clicks **Allow** on the pop-ups.
+- Ask the kid to type a command in a terminal. You run commands; the kid clicks in Godot and plays.

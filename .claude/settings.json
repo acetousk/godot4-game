@@ -10,7 +10,12 @@
       "Bash(git tag --sort:*)",
       "Bash(python tools/*)",
       "Bash(python3 tools/*)",
-      "Bash(py tools/*)"
+      "Bash(py tools/*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config --get:*)",
+      "Bash(python3 --version)",
+      "Bash(py --version)"
     ],
     "ask": [
       "Bash(git push:*)",
