@@ -1,8 +1,17 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/chest.tscn" id="2_chest"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_hud"]
+[ext_resource type="Script" path="res://scripts/game.gd" id="4_game"]
+
+[sub_resource type="NavigationMesh" id="navmesh"]
+geometry_parsed_geometry_type = 1
+geometry_source_geometry_mode = 1
+geometry_source_group_name = &"navmesh"
+agent_radius = 0.5
+agent_height = 2.0
+agent_max_climb = 0.25
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.165, 0.616, 0.561, 1)
@@ -107,6 +116,10 @@ size = Vector3(8.6, 0.3, 8.6)
 size = Vector3(8.6, 0.3, 8.6)
 
 [node name="Main" type="Node3D"]
+script = ExtResource("4_game")
+
+[node name="NavRegion" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("navmesh")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")
@@ -115,7 +128,7 @@ environment = SubResource("env")
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 50, 0)
 shadow_enabled = false
 
-[node name="Island" type="StaticBody3D" parent="."]
+[node name="Island" type="StaticBody3D" parent="." groups=["navmesh"]]
 
 [node name="Sand" type="MeshInstance3D" parent="Island"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
@@ -157,7 +170,7 @@ shape = SubResource("wall_ew")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81, 100, 0)
 shape = SubResource("wall_ew")
 
-[node name="Props" type="Node3D" parent="."]
+[node name="Props" type="Node3D" parent="." groups=["navmesh"]]
 
 [node name="BuildingA" type="StaticBody3D" parent="Props"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.2, -25)
@@ -483,7 +496,7 @@ mesh = SubResource("rock_mesh")
 [node name="Shape" type="CollisionShape3D" parent="Props/Rock8"]
 shape = SubResource("rock_shape")
 
-[node name="Chests" type="Node3D" parent="."]
+[node name="Chests" type="Node3D" parent="." groups=["navmesh"]]
 
 [node name="Chest1" parent="Chests" instance=ExtResource("2_chest")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.2, -27)

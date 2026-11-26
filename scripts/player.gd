@@ -1,5 +1,6 @@
-extends CharacterBody3D
+extends Fighter
 ## The player: reads your controls, moves the capsule, and turns the camera.
+## (HP and taking damage come from health.gd.)
 
 ## True while you float down from the sky at the start.
 var gliding := false
@@ -7,8 +8,6 @@ var gliding := false
 var has_rifle := false
 ## How many heal kits you carry.
 var heal_kits := 0
-## Your health. At 0 you are out.
-var hp := 100.0
 ## HP still to come from the heal kit you are using (0 = not healing).
 var heal_left := 0.0
 ## Shots left in the rifle before you must reload.
@@ -26,11 +25,21 @@ var reloading := false
 
 func _ready() -> void:
 	add_to_group("player")
+	add_to_group("fighter")
 	# The selfie stick must not bump into your own body.
 	spring_arm.add_excluded_object(get_rid())
 	# Start high in the sky and glide down.
 	global_position.y = Tune.drop_height
 	gliding = true
+
+
+## When you are out: hide your body and stop moving. The camera stays.
+func _on_out() -> void:
+	$Body.visible = false
+	$Shape.set_deferred("disabled", true)
+	heal_left = 0.0
+	set_physics_process(false)
+	set_process_unhandled_input(false)
 
 
 ## A chest calls this when you open it.
@@ -72,7 +81,6 @@ func _shoot_bullet() -> void:
 	# Whatever the line touches first takes the damage (if it can).
 	if hit.collider.has_method("take_damage"):
 		hit.collider.take_damage(Tune.rifle_damage, self)
-	print("Hit ", hit.collider.name)
 
 
 func _unhandled_input(event: InputEvent) -> void:

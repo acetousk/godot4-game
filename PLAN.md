@@ -10,7 +10,7 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G2a World + player | `DESIGN.md` | `scripts/tune.gd`, `scenes/main.tscn`, `scenes/player.tscn`, `scripts/player.gd`, `project.godot`, `PLAN.md` | You run and jump on the island with keyboard or gamepad |
 | ✓ | G2b Camera + drop | G2a | `scenes/player.tscn`, `scripts/player.gd`, `scenes/main.tscn`, `scripts/tune.gd` | You glide down from 80 m, land, look, zoom, and can't leave the island |
 | ✓ | G3a Loot + rifle | G2 | `scenes/main.tscn`, `scenes/chest.tscn`, `scripts/chest.gd`, `scripts/player.gd`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd`, `project.godot`, `DESIGN.md` | You open a chest, shoot a target, reload, and heal |
-|  | G3b Bots + win | G3a | `scenes/bot.tscn`, `scripts/bot.gd`, `scripts/health.gd`, `scripts/game.gd`, `scenes/main.tscn`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd` | 3 bots roam and fight; you win when last one left, lose at 0 HP |
+| ✓ | G3b Bots + win | G3a | `scenes/bot.tscn`, `scripts/bot.gd`, `scripts/health.gd`, `scripts/game.gd`, `scenes/main.tscn`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd` | 3 bots roam and fight; you win when last one left, lose at 0 HP |
 |  | Build | G3 | pickaxe, material, Wall | — |
 |  | G4 Pressure | G3 | storm | — |
 |  | G5 Online | G4 | `scripts/net.gd` | — |

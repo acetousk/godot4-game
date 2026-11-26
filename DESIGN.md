@@ -38,7 +38,7 @@
 - **Chests:** 6 chests (hold E 0.5 s): Burst rifle + 1 heal kit (+50 HP, 3 s, max 2)
 - **Health:** 100 HP, no shield
 - **Storm:** 1 phase, shrinks to 0, does damage outside
-- **Bots:** 3 bots. Roam inside the circle (NavigationAgent3D), shoot on sight (raycast 50 m, 30% accuracy far → 60% near). They fight each other too.
+- **Bots:** 3 bots. Roam inside the circle (NavigationAgent3D), shoot on sight (raycast 50 m, 20% accuracy far → 60% near). They fight each other too.
 - **HUD:** HP, material, ammo, players left, storm timer, crosshair
 - **Screens:** start ("Click or tap to start"), end (place, eliminations, time)
 

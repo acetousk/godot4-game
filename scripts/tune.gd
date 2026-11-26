@@ -29,6 +29,12 @@ extends Node
 @export var rifle_range: float = 60.0 ## How far a bullet reaches, in meters
 @export var rifle_reload_time: float = 1.8 ## Seconds to reload
 
+@export_group("Bots")
+@export var bot_speed: float = 5.0 ## How fast bots walk, in meters per second
+@export var bot_sight: float = 50.0 ## How far bots can see someone, in meters
+@export var bot_accuracy_far: float = 0.2 ## Chance a bot bullet hits at the edge of sight (0.2 = 20%)
+@export var bot_accuracy_near: float = 0.6 ## Chance a bot bullet hits up close (0.6 = 60%)
+
 @export_group("Drop")
 @export var drop_height: float = 80.0 ## How high you start in the sky, in meters
 @export var glide_fall: float = 8.0 ## How fast you sink while gliding, in meters per second

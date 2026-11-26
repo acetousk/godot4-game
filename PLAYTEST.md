@@ -9,3 +9,4 @@
 | Date | Version | Who | What they said | Change | Stats | Keep? |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.0.1 | Kid | "feels less slow" | `run_speed` 6 → 7 | — | keep |
+| 2026-11-25 | 0.0.1 | Kid | "too hard from far away, they snipe me" | `bot_accuracy_far` 0.3 → 0.2 | — | keep |
