@@ -8,3 +8,4 @@
 | Date | Version | Who | What they said | Change | Stats | Keep? |
 |---|---|---|---|---|---|---|
 | 2026-11-25 | 0.0.1 | Kid | "The cave is kinda too dark, brighter a bit" | `cave_darkness` 0.35 → 0.5 | — | Keep |
+| 2026-11-25 | 0.0.1 | Kid | "The bone warden is kinda brutal" (died to it) | Warden `damage` [2, 4] → [2, 3] | — | Keep |

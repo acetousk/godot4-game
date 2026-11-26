@@ -4,6 +4,10 @@ extends Sprite2D
 
 ## Sent after each step, when the slide is done.
 signal moved(cell: Vector2i)
+## Sent when you skip a turn (Space / A).
+signal waited
+## Sent when you walk into a monster: that's an attack.
+signal bumped(target: Vector2i)
 
 const TILE := 16
 const DIRS := {
@@ -27,6 +31,10 @@ var max_hp := Tune.player_hp
 var hp := Tune.player_hp
 var level := 1
 var xp := 0
+## Extra damage from leveling up.
+var damage_bonus := 0
+## Asks "is there a monster on this tile?" (set by the game).
+var has_monster: Callable = func(_p: Vector2i) -> bool: return false
 ## Potions you carry (Potions.Kind), up to 4.
 var potions: Array[int] = []
 
@@ -44,6 +52,10 @@ static func cell_to_pos(c: Vector2i) -> Vector2:
 func _unhandled_input(event: InputEvent) -> void:
 	if busy or not active:
 		return
+	if event.is_action_pressed("wait", true):
+		get_viewport().set_input_as_handled()
+		waited.emit()
+		return
 	for action in DIRS:
 		# true = holding the key keeps walking
 		if event.is_action_pressed(action, true):
@@ -56,6 +68,9 @@ func try_move(dir: Vector2i) -> void:
 	var target := cell + dir
 	if gen.get_tile(target) == DungeonGen.Tile.WALL:
 		return  # Walls block you.
+	if has_monster.call(target):
+		bumped.emit(target)  # Walking into a monster = attacking it.
+		return
 	cell = target
 	busy = true
 	var tween := create_tween()

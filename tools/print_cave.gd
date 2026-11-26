@@ -32,6 +32,119 @@ func _ready() -> void:
 			bad += 1
 	print("1000 floors made, ", bad, " with an unreachable goal.")
 
+	# Test: monster counts and types per floor (100 runs of each floor).
+	var game0 = load("res://scenes/game.tscn").instantiate()
+	add_child(game0)
+	for f in [1, 2, 3]:
+		var counts := {}
+		var bad_spot := 0
+		var sizes := {}
+		for run in 100:
+			game0.floor_num = f
+			game0._new_floor()
+			sizes[game0.monsters.size()] = true
+			var start_room: Rect2i = game0._room_with(game0.gen.start)
+			for m in game0.monsters:
+				counts[m.type] = counts.get(m.type, 0) + 1
+				if start_room.has_point(m.cell) or game0.gen.get_tile(m.cell) == DungeonGen.Tile.WALL:
+					bad_spot += 1
+		print("Monster test floor ", f, ": per floor ", sizes.keys(), " types ", counts, " bad spots ", bad_spot)
+	# Test: waking. Put a slime 5 tiles away (stays asleep), then 4 (wakes).
+	game0.floor_num = 2
+	game0._new_floor()
+	var slime: Monster = game0.monsters[0]
+	slime.setup("slime", game0.player.cell + Vector2i(5, 0))
+	game0._wake_monsters()
+	var awake_at_5: bool = slime.awake
+	slime.setup("slime", game0.player.cell + Vector2i(4, 0))
+	game0._wake_monsters()
+	var warden: Monster = game0.monsters[1]
+	warden.setup("warden", game0.player.cell + Vector2i(0, 6))
+	game0._wake_monsters()
+	print("Wake test: slime at 5 awake: ", awake_at_5, ", at 4 awake: ", slime.awake,
+		", warden at 6 awake: ", warden.awake)
+	# Test: chasing. Wake every monster and pass 40 turns: they should end up next to you.
+	game0.floor_num = 1
+	game0._new_floor()
+	for m in game0.monsters:
+		m.awake = true
+	for t in 40:
+		game0._end_turn()
+	var next_to := 0
+	var cells := {}
+	for m in game0.monsters:
+		cells[m.cell] = true
+		if game0.path_dist.get(m.cell, 999) <= 2:
+			next_to += 1
+	print("Chase test: ", game0.monsters.size(), " monsters, ", next_to, " within 2 steps of you, ",
+		"all on different tiles: ", cells.size() == game0.monsters.size())
+	# Test: hit chance over 10000 rolls (should be about 80% and 50%).
+	var hits := 0
+	var moth_hits := 0
+	for r in 10000:
+		if game0._rolls_hit(0):
+			hits += 1
+		if game0._rolls_hit(30):
+			moth_hits += 1
+	print("Hit test: normal ", hits / 100.0, "%, vs moth ", moth_hits / 100.0, "%")
+
+	# Test: fight a warden next to you until one of you drops.
+	game0.player.hp = 20
+	var w: Monster = game0.monsters[0]
+	w.setup("warden", game0.player.cell + Vector2i.RIGHT)
+	var rounds := 0
+	while w.hp > 0 and game0.player.hp > 0 and rounds < 50:
+		game0._on_player_bumped(w.cell)
+		rounds += 1
+	print("Fight test: after ", rounds, " rounds: warden HP ", w.hp, ", your HP ", game0.player.hp,
+		", warden gone: ", not game0.monsters.has(w))
+	# Test: losing. HP 1, a warden next to you attacks until it hits.
+	game0.player.active = true
+	game0.player.hp = 1
+	var killer: Monster = game0.monsters[0] if not game0.monsters.is_empty() else null
+	if killer == null:
+		killer = Monster.new()
+		killer.game = game0
+		game0.monsters_node.add_child(killer)
+		game0.monsters.append(killer)
+	killer.setup("warden", game0.player.cell + Vector2i.LEFT)
+	for t in 20:
+		game0.monster_attacks(killer)
+	game0._on_player_bumped(killer.cell)  # Dead heroes can't attack.
+	print("Lose test: HP ", game0.player.hp, ", can move: ", game0.player.active,
+		", banner: ", game0.hud.has_node("Banner"), ", log: ", game0.hud.log_lines.back())
+	game0.player.active = true  # Bring the hero back for the next tests.
+
+	# Test: resting. Clear the monsters, set HP 10, wait 30 times: +3 HP.
+	for m in game0.monsters.duplicate():
+		game0._kill(m)
+	game0.player.hp = 10
+	for t in 30:
+		game0._on_player_waited()
+	print("Rest test: HP 10 -> ", game0.player.hp, " after 30 waits")
+
+	# Test: embers hits monsters next to you (diagonal too), not 2 tiles away.
+	game0.floor_num = 3
+	game0._new_floor()
+	game0.player.hp = 20
+	var near: Monster = game0.monsters[0]
+	near.setup("warden", game0.player.cell + Vector2i(1, 1))
+	var far: Monster = game0.monsters[1]
+	far.setup("warden", game0.player.cell + Vector2i(2, 0))
+	game0.player.potions.assign([Potions.Kind.EMBERS])
+	game0.drink(0)
+	print("Embers test: warden next to you HP ", near.hp, ", warden 2 away HP ", far.hp)
+
+	# Test: XP and levels.
+	game0.player.hp = 3
+	var levels := []
+	for xp in [6, 6, 6, 6, 6, 6, 6, 6]:
+		game0._gain_xp(xp)
+		levels.append("%d xp=Lv%d" % [game0.player.xp, game0.player.level])
+	print("Level test: ", levels, " max HP ", game0.player.max_hp, " HP ", game0.player.hp,
+		" damage bonus ", game0.player.damage_bonus)
+	game0.queue_free()
+
 	# Test: step on the stairs twice, and check we end on the last floor with no stairs.
 	var game = load("res://scenes/game.tscn").instantiate()
 	add_child(game)
@@ -62,6 +175,11 @@ func _ready() -> void:
 	print("Log: ", game.hud.log_lines)
 	print("Relic test: relic on floor ", game.floor_num, ": ", game.relic != null,
 		", at the goal: ", game.relic != null and game.relic.position == Player.cell_to_pos(game.gen.goal))
+
+	# Test: waiting passes a turn.
+	var turn_before: int = game.turn
+	game._on_player_waited()
+	print("Turn test: turn ", turn_before, " -> ", game.turn)
 
 	# Test: step on the relic and win.
 	game._on_player_moved(game.gen.goal)

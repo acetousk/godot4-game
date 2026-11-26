@@ -5,12 +5,35 @@ extends Node
 # --- Moving ---
 ## How long one step slides, in seconds. Smaller = snappier.
 @export var move_time: float = 0.06
+## How long something flashes red when it gets hit, in seconds.
+@export var hit_flash_time: float = 0.1
 
 # --- Player ---
 ## HP at the start of a run.
 @export var player_hp: int = 20
+## Damage you do with each hit: a random number from min to max.
+@export var player_damage_min: int = 1
+@export var player_damage_max: int = 3
+## Chance to hit, in %, before the target's dodge is taken off.
+@export var hit_chance: int = 80
 ## XP needed for level 2, 3 and 4.
 @export var level_xp: Array[int] = [10, 25, 45]
+## Waiting with no monster awake heals 1 HP every this many waits.
+@export var rest_turns_per_hp: int = 10
+## What each level up gives you (plus a full heal).
+@export var level_hp_gain: int = 5
+@export var level_damage_gain: int = 1
+
+# --- Monsters ---
+## How many monsters on floor 1, 2 and 3.
+@export var monsters_per_floor: Array[int] = [4, 6, 7]
+## Every monster: name, HP, damage (min-max), dodge %, XP it gives,
+## how close you must be to wake it (tiles), and which floors it lives on.
+@export var monster_types: Dictionary = {
+	"slime": {"name": "Mire Slime", "hp": 4, "damage": [1, 2], "dodge": 0, "xp": 2, "wake": 4, "floors": [1, 2]},
+	"moth": {"name": "Cave Moth", "hp": 3, "damage": [1, 3], "dodge": 30, "xp": 3, "wake": 4, "floors": [1, 2, 3]},
+	"warden": {"name": "Bone Warden", "hp": 10, "damage": [2, 3], "dodge": 0, "xp": 6, "wake": 6, "floors": [2, 3]},
+}
 
 # --- Potions ---
 ## HP a Healing potion gives back.

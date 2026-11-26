@@ -38,11 +38,11 @@
 ## Monsters
 Monsters sleep until you come within 4 tiles. In v1.0 all of them move every turn.
 
-| Monster | Floors | HP | Damage | Special |
-|---|---|---|---|---|
-| Mire Slime | 1–2 | 4 | 1–2 | — |
-| Cave Moth | 1–3 | 3 | 1–3 | 30% dodge |
-| Bone Warden | 2–3 | 10 | 2–4 | Wakes at 6 tiles |
+| Monster | Floors | HP | Damage | XP | Special |
+|---|---|---|---|---|---|
+| Mire Slime | 1–2 | 4 | 1–2 | 2 | — |
+| Cave Moth | 1–3 | 3 | 1–3 | 3 | 30% dodge |
+| Bone Warden | 2–3 | 10 | 2–3 | 6 | Wakes at 6 tiles |
 
 Monsters per floor: 4 / 6 / 7.
 
