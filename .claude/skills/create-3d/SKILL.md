@@ -5,12 +5,14 @@ description: Use when a 3D game needs a model - a player, enemy, weapon, item, b
 
 # Create a 3D model
 
-Use the rules in `game-plan`. One model = one step.
+Use the gate in `game-plan` section 3: teach → plan → quiz (hints, never the answer) → approve → build. One model = one step.
 
 ## 1. Ask (one question at a time, skip what DESIGN.md already says)
 1. What is it, and what does it do?
 2. About how big, next to the player (the player is about 1.8 m)?
 3. The 2–3 shapes that make it look right (for example "a box body, a round head, a cone hat").
+
+**Teach, plan, quiz:** Explain how you will make it in 1–2 lines (for example: "3 boxes and a ball, each with a palette colour, put together in one scene"). Show the plan: the file, the way you make it (Claude, CC0, or the kid), and where it goes in the game. Quiz with 1–2 questions, one at a time (for example: "Why do we use only a few shapes, not many?"). Wrong → a hint as in `game-plan` 3.4, never the answer. All right? Ask "Approve this plan?" and stop.
 
 ## 2. Make it, in this order
 1. **You make it from primitives.** One scene per model in `models/` (for example `models/tree.tscn`):
@@ -18,7 +20,7 @@ Use the rules in `game-plan`. One model = one step.
    - A `StandardMaterial3D` per palette colour, saved as `.tres` in `models/materials/`, so models share them.
    - Collision: one simple shape on the body (box or capsule), not one per part.
 2. **A CC0 model** (for example a kenney.nl kit, `.glb`). The kid downloads it and puts it in `models/`. You never download.
-3. **The kid's own model** from Blender, saved as `.glb` in `models/`.
+3. **The kid's own model** in Blender (free). Tell the kid: keep it low-poly (3–12 parts), use the palette colours as materials, apply the scale (Ctrl+A → Scale), then File → Export → glTF 2.0, format `.glb`, into `models/`. Godot imports it by itself.
 
 ## 3. Rules
 - Use only the `DESIGN.md` palette. No textures in the first playable.

@@ -5,7 +5,7 @@ description: Use when the kid reports something broken - "bug:", "broken", "cras
 
 # Bug: proof → cause → fix → play
 
-Use the rules in `game-plan` (approve before edit, one step, `How:` and `▶ Play:` lines).
+Use the gate in `game-plan` section 3: teach → plan → quiz (hints, never the answer) → approve → build.
 
 ## 1. Get proof
 Do not guess. Ask for one of these, then stop:
@@ -20,13 +20,15 @@ A failed build on GitHub? Use the `doctor` skill.
 ## 2. Find the cause
 1. Read only the files in the error, and the code they call.
 2. Find the line that causes it. Check with a headless run if you can: `godot --headless --quit-after <frames>`.
-3. Explain the cause in 1–3 plain lines, as a story of what the game does. No code.
+3. Do not say the cause yet. Ask the kid to find it with you: "What do you think happens just before the freeze?" Give hints as in `game-plan` 3.4: the error line in plain words, then the part of the game it is about, then a real-life picture.
+4. The kid is close, or 3 hints are used? Explain the cause in 1–3 plain lines, as a story of what the game does. No code.
 
 ## 3. Plan
-- The fix changes how the game plays? Ask for a say-back first.
-- A small fix (a typo, a wrong number, a missing node)? No say-back.
-
-Show a plan: one card `B<n>`, 1–3 steps, Output files, Test, Done when. Ask "Approve this plan?" and stop.
+Show a plan: one card `B<n>`, 1–3 steps, Output files, Test, Done when.
+Quiz, as in `game-plan` 3.3–3.4:
+- A small fix (a typo, a wrong number, a missing node) → 1 question: "How will you check it is fixed?"
+- The fix changes how the game plays → 2–3 questions: what changes, why it fixes the cause, how to test it.
+Wrong → a hint, never the answer. All right? Ask "Approve this plan?" and stop.
 
 ## 4. Fix
 1. Change only the Output files. Fix the cause, not the symptom. Do not hide the error.

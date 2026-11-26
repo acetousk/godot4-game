@@ -5,7 +5,7 @@ description: Use when the kid wants to start a game ("make a game", "new game", 
 
 # New game: idea → v0.1.0
 
-Use the rules in `game-plan` (say-back, approve before edit, one step, `How:` and `▶ Play:` lines).
+Use the gate in `game-plan` section 3: teach → plan → quiz (hints, never the answer) → approve → build. Do it for G1, and again at the start of each card G2–G7.
 
 ## 0. First run
 No `DESIGN.md`? Do the first run in `AGENTS.md`. It uses the `doctor` skill.
@@ -26,7 +26,14 @@ Ask **one question at a time**. Wait for each answer.
 
 Write `DESIGN.md`. Count the steps for G2–G7. Over 65 steps? List the parts that cost the most. The kid cuts. Put the cuts in "Not in v1.0".
 
-Ask the kid to say back the whole game in 2–3 lines. Then show the plan for G2–G7 and ask "Approve this plan?".
+Show the plan for G2–G7. Quiz with 3 questions, one at a time, as in `game-plan` 3.3–3.4:
+- "In your own words: what does the player do, and how do they win?"
+- "Which card makes the game online, and what does the host do?"
+- "After card G2, what will you see when you press F5?"
+
+Wrong → a hint, never the answer. All right? Ask "Approve this plan?" and stop.
+
+At the start of each card G2–G7: say what the card makes, then ask 1–2 questions about it (for example G4: "What will make you lose?"). Build after a right answer and a yes.
 
 ## 3. Cards G2–G7
 Budget: about 75 minutes of your work, about 65 steps.
@@ -51,4 +58,4 @@ Some steps need the kid's hands in Godot. Say exactly where to click. Then stop 
 - After your edits, Godot may ask "Reload from disk?". Tell the kid once: click **Reload**.
 
 ## 5. After v0.1.0
-Ask what the kid wants next. Use `feature`, `bug`, or `game-plan` section 6 (tune).
+Ask what the kid wants next. Use `feature`, `bug`, or `game-plan` section 5 (tune).

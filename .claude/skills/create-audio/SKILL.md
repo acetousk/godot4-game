@@ -5,11 +5,13 @@ description: Use when the game needs a sound effect or music - "add a jump sound
 
 # Create sound and music
 
-Use the rules in `game-plan`. One sound = one step.
+Use the gate in `game-plan` section 3: teach → plan → quiz (hints, never the answer) → approve → build. One sound = one step.
 
 ## 1. Ask
 1. Which moment (jump, hit, pickup, win, lose, click, music)?
 2. Describe it with a feeling or an object: "a soft pop", "a heavy thump", "a happy chime".
+
+**Teach, plan, quiz:** Explain how you will make it in 1–2 lines (for example: "a sound is a list of numbers that says where the speaker moves; the script makes that list from a pitch and a fade"). Show the plan: the file, the way you make it (Claude, CC0, or the kid), and where it goes in the game. Quiz with 1–2 questions, one at a time (for example: "If I make the pitch higher, how will the jump sound change?"). Wrong → a hint as in `game-plan` 3.4, never the answer. All right? Ask "Approve this plan?" and stop.
 
 ## 2. Make it, in this order
 1. **You make it.** A script `tools/make_sfx.py` that writes WAV files to `sounds/`.
@@ -19,7 +21,7 @@ Use the rules in `game-plan`. One sound = one step.
    - A fixed `random.seed`, so a run gives the same sounds.
    - Music: `tools/make_music.py` writes one loop of 8–16 s from a short note list in the palette of the game's mood. Ask the kid for the mood.
 2. **A CC0 sound** (for example kenney.nl audio packs, or freesound.org filtered to CC0). The kid downloads it into `sounds/`. You never download.
-3. **The kid's own recording**, saved as WAV or OGG in `sounds/`. No voices of other people.
+3. **The kid's own sound.** Suggest a free program: jsfxr (game sounds, in the browser), Audacity (record and edit), LMMS (music). Export WAV or OGG into `sounds/`. No voices of other people.
 
 ## 3. Play it
 - One autoload `Sfx` (`scripts/sfx.gd`) with a few `AudioStreamPlayer` nodes, and `Sfx.play("jump")`.

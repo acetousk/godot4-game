@@ -5,12 +5,14 @@ description: Use when the game needs a background, sky, or menu backdrop - "add 
 
 # Create a background
 
-Use the rules in `game-plan`. One background = one step.
+Use the gate in `game-plan` section 3: teach → plan → quiz (hints, never the answer) → approve → build. One background = one step.
 
 ## 1. Ask
 1. Where (game, title screen, end screen)?
 2. Time and mood: day, sunset, night, storm, underground, space?
 3. Busy or calm? The background must never hide the player, enemies, or pickups.
+
+**Teach, plan, quiz:** Explain how it works in 1–2 lines (for example: "far layers move slower than near ones, so it looks deep"). Show the plan: the file, the way you make it (Claude, CC0, or the kid), and where it goes in the game. Quiz with 1–2 questions, one at a time (for example: "Which layer moves faster when you run: the near hills or the far sky?"). Wrong → a hint as in `game-plan` 3.4, never the answer. All right? Ask "Approve this plan?" and stop.
 
 ## 2. 2D
 1. 2–3 layers, far to near. Make each one with `create-2d` (SVG shapes work well: hills, clouds, stars).
