@@ -51,6 +51,10 @@ extends Node
 @export var storm_dps_start: float = 2.0 ## HP per second lost outside the circle at the start
 @export var storm_dps_end: float = 10.0 ## HP per second lost outside the circle when it is fully closed
 
+@export_group("Sound")
+@export_range(0.0, 1.0, 0.05) var sfx_volume: float = 0.7 ## How loud all sounds are (0 = silent, 1 = full)
+@export_range(0.0, 1.0, 0.05) var storm_hum_volume: float = 0.6 ## How loud the storm hum is, on top of sfx_volume
+
 @export_group("Online")
 @export var net_send_rate: int = 20 ## How many times a second player and bot spots are sent to the others (higher = smoother, more data)
 

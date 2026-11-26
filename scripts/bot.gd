@@ -148,6 +148,7 @@ func _fire_burst() -> void:
 
 ## One bot bullet. Close = better aim, far = worse aim.
 func _shoot_bullet() -> void:
+	Sfx.play_for_everyone("shot", global_position) # Bots run on the host; everyone hears.
 	var dist := global_position.distance_to(target.global_position)
 	var closeness := 1.0 - clampf(dist / Tune.bot_sight, 0.0, 1.0)
 	var accuracy := lerpf(Tune.bot_accuracy_far, Tune.bot_accuracy_near, closeness)

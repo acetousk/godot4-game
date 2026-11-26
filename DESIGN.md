@@ -28,6 +28,8 @@
 ## Players
 - 1–4 real players online (GD-Sync) + 3 bots
 - The host runs the bots, storm, and chests. Each player sends their own moves, shots, and builds.
+- Start screen: Host (shows a 4-digit room code), Join (type the code), or Solo. The host presses Start.
+- Tested by `python3 tools/net_test.py` (a host and a joiner play by themselves and compare).
 
 ## v0.1 (first playable)
 - **Island:** 160×160 m, water around the edge, 2 spots with box buildings, trees, rocks
@@ -69,6 +71,7 @@
 - Kill feed, minimap circle, hit markers
 - Effects: muzzle flash, tracer, hit/kill ticks, harvest shake + "+10", storm wall shader + heartbeat, glide wind
 - Crouch
+- Online: a new host if the host leaves; host checks hits (anti-cheat)
 
 ## M2 (much later)
 - Floors, roofs, edits; more guns; shields; cars; squads; emotes

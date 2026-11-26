@@ -134,6 +134,7 @@ func _shoot_bullet() -> void:
 	var from := camera.project_ray_origin(center)
 	var to := from + camera.project_ray_normal(center) * Tune.rifle_range
 	var query := PhysicsRayQueryParameters3D.create(from, to, 1, [get_rid()])
+	Sfx.play_for_everyone("shot", global_position)
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		return
@@ -141,8 +142,10 @@ func _shoot_bullet() -> void:
 	# Players and bots: "I hit you" goes to the host, who takes the HP.
 	if hit.collider is Fighter:
 		hit.collider.hurt(Tune.rifle_damage, self)
+		Sfx.play("hit", global_position) # Only you hear your hits.
 	elif hit.collider.has_method("take_damage"):
 		hit.collider.take_damage(Tune.rifle_damage, self) # Walls ask the host too
+		Sfx.play("hit", global_position)
 
 
 ## Pickaxe swing: a short line from your chest the way the camera looks.
@@ -157,6 +160,7 @@ func _swing_pickaxe() -> void:
 	# Trees, rocks, and houses live under the "harvest" node.
 	if hit.collider.get_parent().is_in_group("harvest"):
 		material = mini(material + Tune.material_per_hit, Tune.max_material)
+		Sfx.play_for_everyone("harvest", hit.position)
 
 
 ## Put the ghost wall on the 4 m grid, on the edge of your square that you face.
@@ -198,6 +202,7 @@ func _ask_wall(spot: Transform3D) -> void:
 		wall = WALL_SCENE.instantiate()
 		walls.add_child(wall)
 	wall.transform = spot # Walls sits at the middle of the world, so this is the same spot.
+	Sfx.play_for_everyone("build", spot.origin)
 
 
 func _unhandled_input(event: InputEvent) -> void:

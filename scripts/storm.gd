@@ -32,6 +32,9 @@ func _process(delta: float) -> void:
 	shrinking = time > Tune.storm_wait
 	radius = Tune.storm_start_radius * (1.0 - shrink_part())
 	_update_wall()
+	# Hum while YOUR player is outside the circle (each screen checks its own).
+	var me: Node3D = get_tree().get_first_node_in_group("player")
+	Sfx.loop("storm", me != null and not me.is_out and not is_safe(me.global_position))
 	if not Net.is_host():
 		return
 
@@ -43,6 +46,10 @@ func _process(delta: float) -> void:
 		for fighter in get_tree().get_nodes_in_group("fighter"):
 			if not is_safe(fighter.global_position):
 				fighter.take_damage(damage, null)
+
+
+func _exit_tree() -> void:
+	Sfx.loop("storm", false) # Match over or new match: stop the hum.
 
 
 ## Seconds left: until it starts shrinking, or until it is fully closed.

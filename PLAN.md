@@ -14,9 +14,10 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | B1 Build | G4 | `scripts/player.gd`, `scenes/player.tscn`, `scenes/wall.tscn`, `scripts/wall.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `scripts/tune.gd`, `project.godot`, `scenes/main.tscn`, `DESIGN.md`, `PLAN.md` | You harvest material, build green/red-checked walls on the grid, and a wall blocks bullets until it breaks |
 | ✓ | G4 Storm | G3 | `scripts/storm.gd`, `scenes/main.tscn`, `scripts/tune.gd`, `scripts/bot.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `PLAN.md` | Storm waits, shrinks to 0, hurts anyone outside (more as it shrinks), bots run inside, HUD shows the timer |
 | ✓ | G5a Lobby + see each other | G4, B1, GD-Sync docs | `scripts/net.gd`, `scenes/lobby.tscn`, `scripts/lobby.gd`, `scripts/game.gd`, `scripts/player.gd`, `scenes/player.tscn`, `scenes/main.tscn`, `project.godot`, `PLAN.md` | 2 windows join the same 4-digit room and see each other run and glide |
-|  | G5b Host runs the match | G5a | `scripts/net.gd`, `scripts/game.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/chest.gd`, `scripts/player.gd`, `scripts/health.gd`, `scripts/wall.gd`, scenes, `PLAN.md`, `DESIGN.md` | 2 windows see the same bots, storm, chests; shots and walls work for both; one shared winner |
+| ✓ | G5b Host runs the match | G5a | `scripts/net.gd`, `scripts/game.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/chest.gd`, `scripts/player.gd`, `scripts/health.gd`, `scripts/wall.gd`, scenes, `PLAN.md`, `DESIGN.md` | 2 windows see the same bots, storm, chests; shots and walls work for both; one shared winner |
 | ✓ | T1 Net test | G5b | `tools/net_test.py`, `tools/net_test.gd`, `scripts/net.gd` | `python3 tools/net_test.py` prints a ✅/❌ list comparing host and joiner |
-|  | G6 Flow + sound + touch | G5 | screens, `tools/make_sfx.py`, touch | — |
+| ✓ | G6a Flow + sound | G5b, `DESIGN.md` | `tools/make_sfx.py`, `sounds/*.wav`, `scripts/sfx.gd`, `scripts/player.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/wall.gd`, `scripts/game.gd`, `scripts/tune.gd`, `project.godot`, `CREDITS.md` | 3 rounds in a row work, you hear all 5 sounds, silent until the first click |
+|  | G6b Touch | G6a | `scenes/touch.tscn`, `scripts/touch.gd`, `scenes/hud.tscn`, `scripts/player.gd`, `scripts/tune.gd` | With `force_touch` on, you play a full match with only the mouse as a finger |
 |  | G7 Ship | G6 | title, icon, `CHANGELOG.md`, `v0.1.0` | — |
 
 ### G2a steps
@@ -78,13 +79,28 @@ G2 core loop: island, player, movement, camera, glide start.
 7. Shots: "I hit X" goes to the host; host takes the HP
 8. Walls: build asks the host; host places for everyone
 9. Win / lose: host decides; each screen shows its own place
-10. 2-window test + Tune pass
+10. 2-window test + Tune pass (kid chose: the T1 net test counts; `net_send_rate` stays 20)
 
 ### T1 steps
 1. Test driver: host makes a room, joiner joins, host starts
 2. Joiner actions: open a chest, build a wall, shoot a bot
 3. Snapshots at 10 / 30 / 60 s into a file
 4. `net_test.py` runs both and prints ✅ / ❌
+
+### G6a steps
+1. Play again 3 times (solo restarts; online back to the start screen, host again)
+2. `make_sfx.py` writes 5 WAVs: shot, hit, harvest, build, storm
+3. `Sfx` autoload: sound at a spot, nothing before the first click/tap
+4. Sounds in: shots, hits, pickaxe, wall placed, storm hum outside
+5. Tune pass: `sfx_volume`
+
+### G6b steps
+6. Touch controls only on touch screens; `Tune.force_touch` shows them on PC
+7. Left stick moves
+8. Drag right side to look
+9. Buttons: Fire, Jump, Build, Use, Heal
+10. Auto-pickaxe (touch): fire at tree/rock/house swings the pickaxe
+11. Full match; kid names one fix (→ G7)
 
 ## Bugs
 - Local mode floods Output with "Key must not be empty" (GD-Sync `_unreliable_mac` has no key in local mode; packets still work). Fix idea: send synced spots reliably in local mode only.

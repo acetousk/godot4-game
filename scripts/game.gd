@@ -26,6 +26,7 @@ func _ready() -> void:
 	players.child_entered_tree.connect(_on_fighter_added)
 	bots.child_entered_tree.connect(_on_fighter_added)
 	Net.player_left.connect(_on_player_left)
+	Net.allow(Sfx.play) # Online: other screens may play sounds (shots, builds) on mine.
 
 	if not Net.online:
 		# Solo: one player (you) and the bots.
@@ -113,7 +114,7 @@ func _end(title: String, place: String) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	var stats := "%s   Eliminations %d   Time %d:%02d" % [place, _me().eliminations, int(match_time) / 60, int(match_time) % 60]
 	var hint := "Click, tap or press Space to go back to the start screen" if Net.online \
-			else "Click, tap or press Space to play again"
+			else "Click, tap or press Space to play again.  Esc: start screen"
 	hud.show_end(title, stats, hint)
 	print("Match over: ", title, "  ", stats)
 
@@ -122,7 +123,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	# After the match: click, tap, or press jump.
 	# Solo: play again. Online: leave the room and go back to the start screen.
 	if game_over and restart_wait <= 0.0:
-		if event.is_action_pressed("jump") or event.is_action_pressed("fire") or event is InputEventScreenTouch:
+		if not Net.online and event.is_action_pressed("ui_cancel"):
+			get_tree().change_scene_to_file("res://scenes/lobby.tscn") # Solo → start screen
+		elif event.is_action_pressed("jump") or event.is_action_pressed("fire") or event is InputEventScreenTouch:
 			if Net.online:
 				# The host runs the match, so the host stays until there is a winner.
 				if Net.is_host() and _fighters_left() > 1:
