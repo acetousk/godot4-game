@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.1 — not released yet
+## v0.2.1 — 2026-11-25
 
 - Fixed: in solo, the top left said "Connecting…" / "Could not connect" all match. Now it only shows in online matches.
 
