@@ -5,14 +5,83 @@ config_version=5
 
 config/name="My Game"
 config/version="0.0.1"
-run/main_scene="res://scenes/setup_check.tscn"
+run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Tune="*res://scripts/tune.gd"
 
 [display]
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[input]
+
+move_left={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":65,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"device":-1,"axis":0,"axis_value":-1.0,"script":null)
+]
+}
+move_right={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":68,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"device":-1,"axis":0,"axis_value":1.0,"script":null)
+]
+}
+move_forward={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":87,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"device":-1,"axis":1,"axis_value":-1.0,"script":null)
+]
+}
+move_back={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":83,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"device":-1,"axis":1,"axis_value":1.0,"script":null)
+]
+}
+look_left={
+"deadzone": 0.2,
+"events": [Object(InputEventJoypadMotion,"device":-1,"axis":2,"axis_value":-1.0,"script":null)
+]
+}
+look_right={
+"deadzone": 0.2,
+"events": [Object(InputEventJoypadMotion,"device":-1,"axis":2,"axis_value":1.0,"script":null)
+]
+}
+look_up={
+"deadzone": 0.2,
+"events": [Object(InputEventJoypadMotion,"device":-1,"axis":3,"axis_value":-1.0,"script":null)
+]
+}
+look_down={
+"deadzone": 0.2,
+"events": [Object(InputEventJoypadMotion,"device":-1,"axis":3,"axis_value":1.0,"script":null)
+]
+}
+jump={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":32,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadButton,"device":-1,"button_index":0,"pressed":true,"script":null)
+]
+}
+fire={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,"device":-1,"button_index":1,"pressed":true,"script":null)
+, Object(InputEventJoypadMotion,"device":-1,"axis":5,"axis_value":1.0,"script":null)
+]
+}
+aim={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,"device":-1,"button_index":2,"pressed":true,"script":null)
+, Object(InputEventJoypadMotion,"device":-1,"axis":4,"axis_value":1.0,"script":null)
+]
+}
 
 [rendering]
 

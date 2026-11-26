@@ -1,0 +1,84 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.165, 0.616, 0.561, 1)
+sky_horizon_color = Color(0.914, 0.769, 0.416, 1)
+ground_bottom_color = Color(0.149, 0.275, 0.325, 1)
+ground_horizon_color = Color(0.914, 0.769, 0.416, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+reflected_light_source = 2
+
+[sub_resource type="StandardMaterial3D" id="sand"]
+albedo_color = Color(0.914, 0.769, 0.416, 1)
+
+[sub_resource type="StandardMaterial3D" id="grass"]
+albedo_color = Color(0.416, 0.6, 0.306, 1)
+
+[sub_resource type="StandardMaterial3D" id="water"]
+albedo_color = Color(0.165, 0.616, 0.561, 1)
+
+[sub_resource type="BoxMesh" id="sand_mesh"]
+material = SubResource("sand")
+size = Vector3(160, 4, 160)
+
+[sub_resource type="BoxShape3D" id="sand_shape"]
+size = Vector3(160, 4, 160)
+
+[sub_resource type="BoxMesh" id="grass_mesh"]
+material = SubResource("grass")
+size = Vector3(140, 0.2, 140)
+
+[sub_resource type="BoxShape3D" id="grass_shape"]
+size = Vector3(140, 0.2, 140)
+
+[sub_resource type="PlaneMesh" id="water_mesh"]
+material = SubResource("water")
+size = Vector2(800, 800)
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 50, 0)
+shadow_enabled = false
+
+[node name="Island" type="StaticBody3D" parent="."]
+
+[node name="Sand" type="MeshInstance3D" parent="Island"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+mesh = SubResource("sand_mesh")
+
+[node name="SandShape" type="CollisionShape3D" parent="Island"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+shape = SubResource("sand_shape")
+
+[node name="Grass" type="MeshInstance3D" parent="Island"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("grass_mesh")
+
+[node name="GrassShape" type="CollisionShape3D" parent="Island"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+shape = SubResource("grass_shape")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6, 0)
+mesh = SubResource("water_mesh")
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+
+[node name="OverviewCam" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.894, 0.447, 0, -0.447, 0.894, 0, 6, 12)
+current = true
+far = 1000.0
