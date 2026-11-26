@@ -17,6 +17,8 @@ Tune="*res://scripts/tune.gd"
 
 Net="*res://scripts/net.gd"
 
+Sfx="*res://scripts/sfx.gd"
+
 [display]
 
 window/stretch/mode="canvas_items"

@@ -212,5 +212,6 @@ func _button(text: String, on_press: Callable) -> Button:
 	b.add_theme_color_override("font_color", BONE)
 	b.add_theme_color_override("font_focus_color", YELLOW)
 	b.add_theme_color_override("font_hover_color", YELLOW)
+	b.pressed.connect(Sfx.play.bind("click"))
 	b.pressed.connect(on_press)
 	return b

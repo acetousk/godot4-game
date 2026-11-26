@@ -56,6 +56,7 @@ func _ready() -> void:
 	GDSync.host_changed.connect(_on_host_changed)
 	# Other players may call start_game on us, but only if they are the host.
 	GDSync.expose_func(start_game, ENUMS.EXPOSE_PERMISSION.HOST)
+	GDSync.expose_func(restart_run, ENUMS.EXPOSE_PERMISSION.HOST)
 	# Anyone may ASK the host for a move. The host checks it before doing it.
 	GDSync.expose_func(request_action, ENUMS.EXPOSE_PERMISSION.ANYONE)
 	# Only the host may send the game state.
@@ -95,6 +96,20 @@ func host_starts_game() -> void:
 		return
 	GDSync.lobby_close()  # No more joining after the start.
 	GDSync.call_func_all(start_game, randi(), players)
+
+
+## Host only: Play again. A new seed for everyone, and everyone starts over together.
+func host_restarts() -> void:
+	if is_host():
+		GDSync.call_func_all(restart_run, randi())
+
+
+## Runs on every client (called by the host): a new run with the host's new seed.
+func restart_run(seed_number: int) -> void:
+	run_seed = seed_number
+	var game := get_tree().current_scene
+	if game and game.has_method("start_run"):
+		game.start_run(seed_number)
 
 
 ## Runs on every client (called by the host). Everyone gets the same seed,

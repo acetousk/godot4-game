@@ -59,7 +59,8 @@ func _ready() -> void:
 	add_child(coop)
 	game0.start_run(1234)
 	print("Co-op start test: 2 heroes: ", coop.heroes.size() == 2, ", I control P2: ", coop.heroes[1].controlled and not coop.heroes[0].controlled,
-		", same cave as host: ", _floor_print(coop) == _floor_print(game0))
+		", same map as solo seed: ", coop.gen.to_text() == game0.gen.to_text(),
+		", +2 monsters for P2: ", coop.monsters.size() == game0.monsters.size() + Tune.extra_monsters_per_player)
 	Net.in_coop = false
 	Net.players.clear()
 	Net.my_index = 0
@@ -106,7 +107,10 @@ func _ready() -> void:
 	var state: Dictionary = coop.make_state()
 	state["n"] = 5
 	state["log"] = ["Test line from the host."]
+	state["sfx"] = ["hurt"]
+	Sfx.last = ""
 	friend.apply_state(state)
+	print("Sound sync test: friend plays the host's sound: ", Sfx.last == "hurt")
 	var old_state := state.duplicate(true)
 	old_state["n"] = 4
 	old_state["turn"] = 999
@@ -405,6 +409,47 @@ func _ready() -> void:
 	game._on_player_moved(game.gen.goal, game.player)
 	print("Win test: player can still move: ", game.player.active,
 		", banner: ", game.hud.has_node("Banner"), ", log: ", game.hud.log_lines.back())
+	var end_stats: String = game.hud.get_node("EndPanel/EndStats").text if game.hud.has_node("EndPanel/EndStats") else "-"
+	print("End screen test: stats: ", end_stats.replace("\n", " | "), ", Play again button: ",
+		game.hud.get_node("EndPanel").get_child(1) is Button)
+
+	# Test: Play again 3 times. Each run starts fresh, then ends again.
+	var fresh := []
+	for r in 3:
+		game.player.potions.assign([Potions.Kind.HEALING])
+		game.player.level = 3
+		game._on_play_again()
+		var p: Player = game.player
+		fresh.append(not game.hud.has_node("Banner") and not game.hud.has_node("EndPanel") and p.active
+			and p.hp == Tune.player_hp and p.level == 1 and p.potions.is_empty() and game.floor_num == 1
+			and game.turn == 0 and game.kills == 0 and p.modulate == Color.WHITE)
+		game._lose(p, "a test")  # End this run.
+	print("Play again test: 3 fresh runs: ", fresh, ", end screen back after each: ", game.hud.has_node("EndPanel"))
+
+	# Test: the touch pad. Wait in the middle = 1 turn. Hidden on the end screen.
+	var pad_hidden_at_end: bool = not game.hud.pad.visible
+	game._on_play_again()
+	var pad_back: bool = game.hud.pad.visible
+	var t_pad: int = game.turn
+	game.hud.pad.get_child(4).pressed.emit()  # The Wait button.
+	print("Touch pad test: 4 arrows + Wait: ", game.hud.pad.get_children().filter(func(c): return c is Button).size() == 5,
+		", Wait = 1 turn: ", game.turn == t_pad + 1, ", hidden at the end: ", pad_hidden_at_end, ", back after Play again: ", pad_back)
+
+	# Test: sounds in the game. Drink, stairs, then everyone dies.
+	game.player.potions.assign([Potions.Kind.HEALING])
+	game.drink(0)
+	var s_drink: String = Sfx.last
+	game.actor = game.player
+	game._go_down()
+	var s_stairs: String = Sfx.last
+	game._lose(game.player, "a test")
+	print("Sound test: drink: ", s_drink, ", stairs: ", s_stairs, ", lose: ", Sfx.last)
+	game._on_play_again()
+
+	# Test: tapping tiles. Middle of the tile to the left = step left, on me = wait, far = nothing.
+	var me: Vector2 = Player.cell_to_pos(game.player.cell)
+	print("Tap test: left: ", game.tap_action(me + Vector2(-16, 0)), ", below: ", game.tap_action(me + Vector2(0, 16)),
+		", on me: ", game.tap_action(me), ", 2 away: '", game.tap_action(me + Vector2(32, 0)), "', corner: '", game.tap_action(me + Vector2(16, 16)), "'")
 	get_tree().quit()
 
 
