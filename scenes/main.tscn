@@ -187,7 +187,7 @@ shape = SubResource("wall_ew")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81, 100, 0)
 shape = SubResource("wall_ew")
 
-[node name="Props" type="Node3D" parent="." groups=["navmesh"]]
+[node name="Props" type="Node3D" parent="." groups=["navmesh", "harvest"]]
 
 [node name="BuildingA" type="StaticBody3D" parent="Props"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.2, -25)

@@ -16,6 +16,22 @@ var ammo := 0
 var fire_cooldown := 0.0
 ## True while you reload (you cannot shoot).
 var reloading := false
+## What is in your hand: 1 = pickaxe, 2 = rifle.
+var slot := 1
+## Building material you have collected.
+var material := 0
+## True while build mode is on (fire places a wall instead of shooting).
+var building := false
+
+## True when the ghost wall spot is OK to build on.
+var can_build := false
+var ghost_mat: StandardMaterial3D
+
+const WALL_SCENE := preload("res://scenes/wall.tscn")
+const GHOST_OK := Color(0.416, 0.6, 0.306, 0.45)  # grass green
+const GHOST_NO := Color(0.482, 0.173, 0.749, 0.45)  # storm purple
+
+@onready var ghost: MeshInstance3D = $Ghost
 
 @onready var cam_yaw: Node3D = $CamYaw
 @onready var cam_pitch: Node3D = $CamYaw/CamPitch
@@ -28,6 +44,11 @@ func _ready() -> void:
 	add_to_group("fighter")
 	# The selfie stick must not bump into your own body.
 	spring_arm.add_excluded_object(get_rid())
+	# The ghost wall is one build square wide and tall.
+	ghost.mesh.size = Vector3(Tune.build_grid, Tune.build_grid, 0.2)
+	# My own copy of the ghost color, so I can make it green or purple.
+	ghost_mat = ghost.mesh.material.duplicate()
+	ghost.material_override = ghost_mat
 	# Start high in the sky and glide down.
 	global_position.y = Tune.drop_height
 	gliding = true
@@ -47,6 +68,7 @@ func give_loot() -> void:
 	if not has_rifle:
 		has_rifle = true
 		ammo = Tune.rifle_mag
+		slot = 2  # Your first rifle goes straight into your hand.
 	heal_kits = mini(heal_kits + 1, Tune.max_heal_kits)
 
 
@@ -83,6 +105,51 @@ func _shoot_bullet() -> void:
 		hit.collider.take_damage(Tune.rifle_damage, self)
 
 
+## Pickaxe swing: a short line from your chest the way the camera looks.
+func _swing_pickaxe() -> void:
+	fire_cooldown = Tune.pickaxe_swing_every
+	var from := global_position + Vector3(0, 1.2, 0)
+	var to := from + -camera.global_basis.z * Tune.pickaxe_reach
+	var query := PhysicsRayQueryParameters3D.create(from, to, 1, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return
+	# Trees, rocks, and houses live under the "harvest" node.
+	if hit.collider.get_parent().is_in_group("harvest"):
+		material = mini(material + Tune.material_per_hit, Tune.max_material)
+
+
+## Put the ghost wall on the 4 m grid, on the edge of your square that you face.
+func _update_ghost() -> void:
+	var grid := Tune.build_grid
+	# Which way you face, snapped to north, east, south, or west.
+	var forward := -cam_yaw.global_basis.z
+	var dir := Vector3(signf(forward.x), 0, 0) if absf(forward.x) > absf(forward.z) else Vector3(0, 0, signf(forward.z))
+	# The middle of the grid square you stand in.
+	var cell := Vector3(floorf(global_position.x / grid) * grid + grid / 2.0, 0, floorf(global_position.z / grid) * grid + grid / 2.0)
+	ghost.global_position = cell + dir * grid / 2.0 + Vector3(0, global_position.y + grid / 2.0, 0)
+	ghost.global_rotation = Vector3(0, PI / 2.0 if dir.x != 0.0 else 0.0, 0)
+
+	# Can I build here? Need enough material, and nothing already in the way.
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(grid - 0.2, grid - 0.4, 0.15)
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = shape
+	query.transform = ghost.global_transform.translated(Vector3(0, 0.1, 0))
+	query.exclude = [get_rid()]
+	var blocked := not get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()
+	can_build = material >= Tune.wall_cost and not blocked
+	ghost_mat.albedo_color = GHOST_OK if can_build else GHOST_NO
+
+
+## Turn the ghost into a real wall.
+func _place_wall() -> void:
+	material -= Tune.wall_cost
+	var wall: Node3D = WALL_SCENE.instantiate()
+	get_tree().current_scene.add_child(wall)
+	wall.global_transform = ghost.global_transform
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	# Click to grab the mouse, Esc to let it go.
 	if event is InputEventMouseButton and event.pressed:
@@ -108,9 +175,29 @@ func _physics_process(delta: float) -> void:
 	if stick != Vector2.ZERO:
 		_look(-stick * Tune.stick_look_speed * delta)
 
+	# Slots: switch what is in your hand.
+	if Input.is_action_just_pressed("slot_1"):
+		slot = 1
+	elif Input.is_action_just_pressed("slot_2") and has_rifle:
+		slot = 2
+
 	# Fire: hold the fire button to keep shooting bursts.
+	# Build mode: Q turns it on and off. Picking a slot turns it off.
+	if Input.is_action_just_pressed("build"):
+		building = not building
+	if Input.is_action_just_pressed("slot_1") or Input.is_action_just_pressed("slot_2"):
+		building = false
+	ghost.visible = building
+	if building:
+		_update_ghost()
+
 	fire_cooldown -= delta
-	if has_rifle and not reloading:
+	if building:
+		if Input.is_action_just_pressed("fire") and can_build:
+			_place_wall()
+	elif slot == 1 and Input.is_action_pressed("fire") and fire_cooldown <= 0.0:
+		_swing_pickaxe()
+	elif slot == 2 and has_rifle and not reloading:
 		if Input.is_action_pressed("fire") and fire_cooldown <= 0.0 and ammo > 0:
 			_fire_burst()
 		# Reload when you press the button, or by itself when empty.

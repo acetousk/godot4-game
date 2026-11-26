@@ -11,3 +11,4 @@
 | 2026-11-25 | 0.0.1 | Kid | "feels less slow" | `run_speed` 6 → 7 | — | keep |
 | 2026-11-25 | 0.0.1 | Kid | "too hard from far away, they snipe me" | `bot_accuracy_far` 0.3 → 0.2 | — | keep |
 | 2026-11-25 | 0.0.1 | Kid | "the start was kinda boring" | `storm_wait` 45 → 35 | — | keep |
+| 2026-11-25 | 0.0.1 | Kid | "farming was slow" | `pickaxe_swing_every` 0.4 → 0.3 | — | keep |

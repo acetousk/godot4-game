@@ -11,7 +11,7 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G2b Camera + drop | G2a | `scenes/player.tscn`, `scripts/player.gd`, `scenes/main.tscn`, `scripts/tune.gd` | You glide down from 80 m, land, look, zoom, and can't leave the island |
 | ✓ | G3a Loot + rifle | G2 | `scenes/main.tscn`, `scenes/chest.tscn`, `scripts/chest.gd`, `scripts/player.gd`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd`, `project.godot`, `DESIGN.md` | You open a chest, shoot a target, reload, and heal |
 | ✓ | G3b Bots + win | G3a | `scenes/bot.tscn`, `scripts/bot.gd`, `scripts/health.gd`, `scripts/game.gd`, `scenes/main.tscn`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd` | 3 bots roam and fight; you win when last one left, lose at 0 HP |
-|  | Build | G3 | pickaxe, material, Wall | — |
+| ✓ | B1 Build | G4 | `scripts/player.gd`, `scenes/player.tscn`, `scenes/wall.tscn`, `scripts/wall.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `scripts/tune.gd`, `project.godot`, `scenes/main.tscn`, `DESIGN.md`, `PLAN.md` | You harvest material, build green/red-checked walls on the grid, and a wall blocks bullets until it breaks |
 | ✓ | G4 Storm | G3 | `scripts/storm.gd`, `scenes/main.tscn`, `scripts/tune.gd`, `scripts/bot.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `PLAN.md` | Storm waits, shrinks to 0, hurts anyone outside (more as it shrinks), bots run inside, HUD shows the timer |
 |  | G5 Online | G4 | `scripts/net.gd` | — |
 |  | G6 Flow + sound + touch | G5 | screens, `tools/make_sfx.py`, touch | — |
@@ -56,5 +56,13 @@ G2 core loop: island, player, movement, camera, glide start.
 5. Bots outside walk inside first
 6. Tune pass
 
+### B1 steps
+1. Slots: 1 pickaxe, 2 rifle (D-pad left/right)
+2. Pickaxe: +10 material per hit (max 300)
+3. Build mode Q / Y: ghost wall on 4 m grid
+4. Ghost green / red
+5. Place wall: −10 material, 150 HP, blocks bullets
+6. Tune pass
+
 ## Bugs
-(none yet)
+- Bots don't path around built walls (map is baked at start). Fix with the smart bots card.

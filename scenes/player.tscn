@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 
@@ -14,6 +14,16 @@ height = 1.8
 radius = 0.4
 height = 1.8
 
+[sub_resource type="StandardMaterial3D" id="ghost_mat"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.416, 0.6, 0.306, 0.45)
+
+[sub_resource type="BoxMesh" id="ghost_mesh"]
+material = SubResource("ghost_mat")
+size = Vector3(4, 4, 0.2)
+
 [node name="Player" type="CharacterBody3D"]
 collision_mask = 3
 script = ExtResource("1_player")
@@ -25,6 +35,12 @@ mesh = SubResource("body_mesh")
 [node name="Shape" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("body_shape")
+
+[node name="Ghost" type="MeshInstance3D" parent="."]
+top_level = true
+visible = false
+mesh = SubResource("ghost_mesh")
+cast_shadow = 0
 
 [node name="CamYaw" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)

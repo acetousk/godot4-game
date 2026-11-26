@@ -29,6 +29,15 @@ extends Node
 @export var rifle_range: float = 60.0 ## How far a bullet reaches, in meters
 @export var rifle_reload_time: float = 1.8 ## Seconds to reload
 
+@export_group("Building")
+@export var material_per_hit: int = 10 ## Material from one pickaxe hit
+@export var max_material: int = 300 ## Most material you can carry
+@export var pickaxe_reach: float = 2.5 ## How far the pickaxe reaches, in meters
+@export var pickaxe_swing_every: float = 0.3 ## Seconds between pickaxe swings
+@export var wall_cost: int = 10 ## Material one wall costs
+@export var wall_hp: float = 150.0 ## How much damage a wall takes before it breaks
+@export var build_grid: float = 4.0 ## Size of one build square, in meters (walls are this wide and tall)
+
 @export_group("Bots")
 @export var bot_speed: float = 5.0 ## How fast bots walk, in meters per second
 @export var bot_sight: float = 50.0 ## How far bots can see someone, in meters

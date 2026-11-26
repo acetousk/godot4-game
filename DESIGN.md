@@ -15,6 +15,7 @@
 | Jump | Space | A | Jump button |
 | Fire / harvest | Left click | RT | Fire button |
 | Aim | Right click | LT | Aim button |
+| Pickaxe / rifle | 1 / 2 | D-pad left / right | Slot buttons |
 | Reload | R (or auto when empty) | RB | Auto when empty |
 | Build mode | Q | Y | Build button |
 | Action (open chest) | Hold E | X | Action button |
@@ -32,8 +33,8 @@
 - **Island:** 160×160 m, water around the edge, 2 spots with box buildings, trees, rocks
 - **Drop:** start high in the sky, glide down (8 m/s down, 10 m/s steer)
 - **Move:** run 7 m/s, jump 1.2 m
-- **Pickaxe:** +10 material per hit (max 300)
-- **Build:** Wall only. 10 material, 4 m grid snap, 150 HP, blocks shots, green/red ghost piece
+- **Pickaxe:** +10 material per hit, a swing every 0.3 s (max 300). Slot 1 = pickaxe, slot 2 = rifle
+- **Build:** Wall only. 10 material, 4 m grid snap, 150 HP, blocks shots. Ghost piece is green = OK, purple = can't build
 - **Gun:** Burst rifle (3×12 dmg, burst every 0.6 s, mag 15, 60 m, reload 1.8 s), unlimited ammo with reloads
 - **Chests:** 6 chests (hold E 0.5 s): Burst rifle + 1 heal kit (+50 HP, 3 s, max 2)
 - **Health:** 100 HP, no shield
