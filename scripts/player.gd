@@ -148,13 +148,24 @@ func _shoot_bullet() -> void:
 		Sfx.play("hit", global_position)
 
 
-## Pickaxe swing: a short line from your chest the way the camera looks.
-func _swing_pickaxe() -> void:
-	fire_cooldown = Tune.pickaxe_swing_every
+## Pickaxe reach: a short line from your chest the way the camera looks.
+func _pickaxe_hit() -> Dictionary:
 	var from := global_position + Vector3(0, 1.2, 0)
 	var to := from + -camera.global_basis.z * Tune.pickaxe_reach
 	var query := PhysicsRayQueryParameters3D.create(from, to, 1, [get_rid()])
-	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return get_world_3d().direct_space_state.intersect_ray(query)
+
+
+## True if a tree, rock, or house is close enough to hit with the pickaxe.
+func _facing_harvest() -> bool:
+	var hit := _pickaxe_hit()
+	return not hit.is_empty() and hit.collider.get_parent().is_in_group("harvest")
+
+
+## Pickaxe swing.
+func _swing_pickaxe() -> void:
+	fire_cooldown = Tune.pickaxe_swing_every
+	var hit := _pickaxe_hit()
 	if hit.is_empty():
 		return
 	# Trees, rocks, and houses live under the "harvest" node.
@@ -206,8 +217,8 @@ func _ask_wall(spot: Transform3D) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Click to grab the mouse, Esc to let it go.
-	if event is InputEventMouseButton and event.pressed:
+	# Click to grab the mouse, Esc to let it go. (Not with touch controls: you need the pointer.)
+	if event is InputEventMouseButton and event.pressed and not TouchControls.is_on():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -235,6 +246,10 @@ func _physics_process(delta: float) -> void:
 		slot = 1
 	elif Input.is_action_just_pressed("slot_2") and has_rifle:
 		slot = 2
+	# Touch has no swap button: aim at a tree, rock, or house up close and
+	# FIRE swings the pickaxe; anywhere else it fires the rifle.
+	if TouchControls.is_on() and has_rifle:
+		slot = 1 if _facing_harvest() else 2
 
 	# Fire: hold the fire button to keep shooting bursts.
 	# Build mode: Q turns it on and off. Picking a slot turns it off.

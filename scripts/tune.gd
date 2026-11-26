@@ -9,6 +9,7 @@ extends Node
 @export_group("Looking")
 @export var look_speed: float = 0.003 ## Mouse look speed (higher = turn faster)
 @export var stick_look_speed: float = 3.0 ## Gamepad right-stick look speed
+@export var touch_look_speed: float = 0.006 ## Touch look speed: drag on the right side (higher = turn faster)
 @export var normal_fov: float = 75.0 ## How wide the camera sees normally, in degrees
 @export var aim_fov: float = 45.0 ## How wide the camera sees when aiming (lower = more zoom)
 @export var aim_look_slow: float = 0.5 ## Look speed while aiming (0.5 = half speed)
@@ -54,6 +55,9 @@ extends Node
 @export_group("Sound")
 @export_range(0.0, 1.0, 0.05) var sfx_volume: float = 0.7 ## How loud all sounds are (0 = silent, 1 = full)
 @export_range(0.0, 1.0, 0.05) var storm_hum_volume: float = 0.6 ## How loud the storm hum is, on top of sfx_volume
+
+@export_group("Touch")
+@export var force_touch: bool = false ## Show the phone controls on your PC too (the mouse acts like a finger)
 
 @export_group("Online")
 @export var net_send_rate: int = 20 ## How many times a second player and bot spots are sent to the others (higher = smoother, more data)

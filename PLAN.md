@@ -17,7 +17,7 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G5b Host runs the match | G5a | `scripts/net.gd`, `scripts/game.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/chest.gd`, `scripts/player.gd`, `scripts/health.gd`, `scripts/wall.gd`, scenes, `PLAN.md`, `DESIGN.md` | 2 windows see the same bots, storm, chests; shots and walls work for both; one shared winner |
 | ✓ | T1 Net test | G5b | `tools/net_test.py`, `tools/net_test.gd`, `scripts/net.gd` | `python3 tools/net_test.py` prints a ✅/❌ list comparing host and joiner |
 | ✓ | G6a Flow + sound | G5b, `DESIGN.md` | `tools/make_sfx.py`, `sounds/*.wav`, `scripts/sfx.gd`, `scripts/player.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/wall.gd`, `scripts/game.gd`, `scripts/tune.gd`, `project.godot`, `CREDITS.md` | 3 rounds in a row work, you hear all 5 sounds, silent until the first click |
-|  | G6b Touch | G6a | `scenes/touch.tscn`, `scripts/touch.gd`, `scenes/hud.tscn`, `scripts/player.gd`, `scripts/tune.gd` | With `force_touch` on, you play a full match with only the mouse as a finger |
+| ✓ | G6b Touch | G6a | `scenes/touch.tscn`, `scripts/touch.gd`, `scenes/hud.tscn`, `scripts/player.gd`, `scripts/tune.gd` | With `force_touch` on, you play a full match with only the mouse as a finger |
 |  | G7 Ship | G6 | title, icon, `CHANGELOG.md`, `v0.1.0` | — |
 
 ### G2a steps
@@ -100,7 +100,7 @@ G2 core loop: island, player, movement, camera, glide start.
 8. Drag right side to look
 9. Buttons: Fire, Jump, Build, Use, Heal
 10. Auto-pickaxe (touch): fire at tree/rock/house swings the pickaxe
-11. Full match; kid names one fix (→ G7)
+11. Full match; kid names one fix (→ G7). Kid said "ok": no fix named.
 
 ## Bugs
 - Local mode floods Output with "Key must not be empty" (GD-Sync `_unreliable_mac` has no key in local mode; packets still work). Fix idea: send synced spots reliably in local mode only.
