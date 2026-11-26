@@ -10,7 +10,9 @@ You do every git step. The kid only says "go" and clicks **Allow** on each pop-u
 ## 1. Ready?
 1. `git status`. Nothing changed and no new commits since the last tag? Say "Nothing new to ship." Stop.
 2. Run the checks: `godot --headless --import`, then `godot --headless --quit-after 60`. Errors → use `bug`. Stop.
-3. Tests in `tools/` (for example `python3 tools/net_test.py`)? Run them yourself. They fail → use `bug`. Stop.
+3. Tests in `tools/` (for example `python3 tools/net_test.py`)? Run them yourself. They fail → run the same test on the last released tag (`git worktree add .godot/last <tag>`, then remove it).
+   - It passes there → the new change broke it. Use `bug`. Stop.
+   - It fails there too → this computer blocks the test, not the change. Tell the kid in 1 line, in game words. Use the kid's own 2-window play test instead, and go on.
 4. A step the kid has not played yet? Ask for one ▶ Play round first.
 5. **Quiz: does the kid know what ships?** Read `CHANGELOG.md` since the last tag. Do not read the list to the kid. Ask, one at a time:
    - "What is new in this version? Say it in your own words."
