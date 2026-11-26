@@ -25,6 +25,14 @@ var gen: DungeonGen
 var busy := false
 ## False when the run is over (win or lose): no more moving.
 var active := true
+## True for the hero your keys move. The other heroes ignore your keys.
+var controlled := true
+## Hero number: 1 to 4 (P1-P4).
+var number := 1
+## True after this hero acted this round. It waits until its friends acted too.
+var done := false
+## Waits in a row with no monster awake. Every 10 = +1 HP.
+var rest_count := 0
 
 # --- Stats ---
 var max_hp := Tune.player_hp
@@ -35,6 +43,8 @@ var xp := 0
 var damage_bonus := 0
 ## Asks "is there a monster on this tile?" (set by the game).
 var has_monster: Callable = func(_p: Vector2i) -> bool: return false
+## Asks "is another hero on this tile?" (set by the game). Friends block you.
+var has_friend: Callable = func(_p: Vector2i) -> bool: return false
 ## Potions you carry (Potions.Kind), up to 4.
 var potions: Array[int] = []
 
@@ -50,7 +60,7 @@ static func cell_to_pos(c: Vector2i) -> Vector2:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if busy or not active:
+	if busy or not active or not controlled or done:
 		return
 	if event.is_action_pressed("wait", true):
 		get_viewport().set_input_as_handled()
@@ -71,6 +81,8 @@ func try_move(dir: Vector2i) -> void:
 	if has_monster.call(target):
 		bumped.emit(target)  # Walking into a monster = attacking it.
 		return
+	if has_friend.call(target):
+		return  # A friend is standing there.
 	cell = target
 	busy = true
 	var tween := create_tween()

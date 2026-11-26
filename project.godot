@@ -11,6 +11,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+GDSync="*res://addons/GD-Sync/MultiplayerClient.gd"
+
 Tune="*res://scripts/tune.gd"
 
 [display]
@@ -64,3 +66,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 textures/canvas_textures/default_texture_filter=0
 environment/defaults/default_clear_color=Color(0.101961, 0.0784314, 0.0627451, 1)
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/GD-Sync/plugin.cfg")

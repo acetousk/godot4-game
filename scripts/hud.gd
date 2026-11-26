@@ -25,12 +25,15 @@ func _ready() -> void:
 
 
 ## Shows HP, level, XP and floor at the top left.
-func show_stats(player: Player, floor_num: int) -> void:
+## `waiting` is like "Waiting for P2" (empty = nobody to wait for).
+func show_stats(player: Player, floor_num: int, waiting := "") -> void:
 	var xp_text := "%d" % player.xp
 	if player.level - 1 < Tune.level_xp.size():
 		xp_text += "/%d" % Tune.level_xp[player.level - 1]  # XP needed for the next level
-	stats.text = "HP %d/%d    Lv %d  XP %s    Floor %d" % [
-		player.hp, player.max_hp, player.level, xp_text, floor_num]
+	stats.text = "P%d    HP %d/%d    Lv %d  XP %s    Floor %d" % [
+		player.number, player.hp, player.max_hp, player.level, xp_text, floor_num]
+	if waiting != "":
+		stats.text += "    " + waiting
 
 
 ## Shows the potions you carry in the slots. Empty slots show nothing.

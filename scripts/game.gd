@@ -20,8 +20,22 @@ const TILE_ART := {
 
 const POTION_ART := preload("res://art/potion.png")
 const RELIC_ART := preload("res://art/relic.png")
+const HERO_ART := preload("res://art/player.png")
+## Each hero's color (Ember Cave palette): P1 normal, P2 green, P3 orange, P4 yellow.
+const HERO_TINTS := [Color.WHITE, Color("#7fae5a"), Color("#f2a33a"), Color("#ffd966")]
 
+## TEST ONLY (card N1): how many heroes you get when playing alone.
+## Tab switches which hero you move. Goes back to 1 when the online menu comes (N2).
+@export var test_heroes := 2
+
+## All heroes in the run (1-4). heroes[0] is the Player node in the scene.
+var heroes: Array[Player] = []
+
+## Dice for fights. (Only the host rolls these in co-op.)
 var rng := RandomNumberGenerator.new()
+## The run's seed number. Same seed = same caves, monsters and potions.
+## In co-op the host makes it and sends it to everyone.
+var run_seed := 0
 var gen: DungeonGen
 var floor_num := 1
 var potions := Potions.new()
@@ -39,8 +53,6 @@ var turn := 0
 var monsters: Array = []
 ## Steps from each tile to the player (walking around walls). Made fresh each turn.
 var path_dist := {}
-## Waits in a row with no monster awake. Every 10 = +1 HP.
-var rest_count := 0
 
 
 func _ready() -> void:
@@ -50,29 +62,115 @@ func _ready() -> void:
 	var b := Tune.remembered_brightness
 	remembered.modulate = Color(b, b, b)
 	_setup_lantern()
-	player.moved.connect(_on_player_moved)
-	player.waited.connect(_on_player_waited)
-	player.bumped.connect(_on_player_bumped)
-	player.has_monster = func(p: Vector2i) -> bool: return monster_at(p) != null
+	_make_heroes(test_heroes)
 	hud.slot_pressed.connect(drink)
-	potions.new_run(rng)
+	start_run(rng.randi())
+
+
+## Starts a run from a seed number. The same seed always makes the same run.
+func start_run(seed_number: int) -> void:
+	run_seed = seed_number
+	floor_num = 1
+	turn = 0
+	potions.new_run(_seeded_rng(0))  # Floor "0" = the potion colors.
 	_new_floor()
 	hud.add_log("You light your lantern and enter the cave.")
 
 
+## A fresh dice box for one floor, made from the run seed and the floor number.
+## Fights use other dice, so a fight can never change what the next floor looks like.
+func _seeded_rng(floor_number: int) -> RandomNumberGenerator:
+	var r := RandomNumberGenerator.new()
+	r.seed = hash([run_seed, floor_number])
+	return r
+
+
 func _new_floor() -> void:
+	var floor_rng := _seeded_rng(floor_num)
 	gen = DungeonGen.new()
-	gen.generate(rng, floor_num < Tune.floor_count)
+	gen.generate(floor_rng, floor_num < Tune.floor_count)
 	seen_before.clear()
 	remembered.clear()
-	player.gen = gen
-	player.place(gen.start)
-	_place_potions()
+	var spots := _start_spots(heroes.size())
+	for i in heroes.size():
+		heroes[i].gen = gen
+		heroes[i].place(spots[i])
+		heroes[i].done = false  # A new floor starts a new round.
+	_place_potions(floor_rng)
 	_place_relic()
-	_place_monsters()
+	_place_monsters(floor_rng)
 	_setup_camera()
 	_update_view()
 	_refresh_hud()
+
+
+# --- Heroes ---
+
+## Makes the hero list. Hero 1 is the Player in the scene (it has the camera).
+## The others are copies with their own lantern and color.
+func _make_heroes(count: int) -> void:
+	heroes = [player]
+	for i in range(1, count):
+		var h := Player.new()
+		h.name = "Hero%d" % (i + 1)
+		h.texture = HERO_ART
+		var light := PointLight2D.new()
+		light.texture = lantern.texture
+		light.color = lantern.color
+		light.energy = lantern.energy
+		h.add_child(light)
+		add_child(h)
+		heroes.append(h)
+	for i in heroes.size():
+		var h := heroes[i]
+		h.number = i + 1
+		h.self_modulate = HERO_TINTS[i]  # The hit flash uses modulate, so the color stays.
+		h.controlled = h == player
+		h.moved.connect(_on_player_moved)
+		h.waited.connect(_on_player_waited)
+		h.bumped.connect(_on_player_bumped)
+		h.has_monster = func(p: Vector2i) -> bool: return monster_at(p) != null
+		h.has_friend = func(p: Vector2i) -> bool: return hero_at(p) != null
+
+
+## The hero on this tile, or null.
+func hero_at(p: Vector2i) -> Player:
+	for h in heroes:
+		if h.active and h.cell == p:  # Ghosts don't block anyone.
+			return h
+	return null
+
+
+## Start tiles for the heroes: the floor tiles of the start room closest to the start.
+func _start_spots(count: int) -> Array[Vector2i]:
+	var room := _room_with(gen.start)
+	var cells: Array[Vector2i] = []
+	for y in range(room.position.y, room.end.y):
+		for x in range(room.position.x, room.end.x):
+			var p := Vector2i(x, y)
+			if gen.get_tile(p) == DungeonGen.Tile.FLOOR:
+				cells.append(p)
+	cells.sort_custom(func(a, b): return a.distance_squared_to(gen.start) < b.distance_squared_to(gen.start))
+	return cells.slice(0, count)
+
+
+## TEST ONLY (N1): Tab moves your keys (and the camera) to the next living hero.
+func _switch_hero() -> void:
+	if player.busy:
+		return
+	var i := heroes.find(player)
+	for step in range(1, heroes.size()):
+		var next := heroes[(i + step) % heroes.size()]
+		if next.active:
+			player.controlled = false
+			player = next
+			player.controlled = true
+			camera.reparent(player, false)
+			camera.position = Vector2.ZERO
+			camera.reset_smoothing()
+			_update_view()
+			_refresh_hud()
+			return
 
 
 func _on_player_moved(cell: Vector2i) -> void:
@@ -86,26 +184,26 @@ func _on_player_moved(cell: Vector2i) -> void:
 		_refresh_hud()
 		_win()
 		return
-	_end_turn()
+	_hero_done()
 
 
 ## Wait: skip a turn. If no monster is awake, you rest: every 10 waits heal 1 HP.
 func _on_player_waited() -> void:
 	var any_awake := monsters.any(func(m): return m.awake)
 	if any_awake:
-		rest_count = 0
+		player.rest_count = 0
 		hud.add_log("You wait. You can't rest with a monster awake.")
 	elif player.hp < player.max_hp:
-		rest_count += 1
-		if rest_count >= Tune.rest_turns_per_hp:
-			rest_count = 0
+		player.rest_count += 1
+		if player.rest_count >= Tune.rest_turns_per_hp:
+			player.rest_count = 0
 			player.hp += 1
 			hud.add_log("You rest. +1 HP")
-		elif rest_count == 1:
+		elif player.rest_count == 1:
 			hud.add_log("You rest...")
 	else:
 		hud.add_log("You wait.")
-	_end_turn()
+	_hero_done()
 
 
 # --- Fighting ---
@@ -128,22 +226,33 @@ func _on_player_bumped(target: Vector2i) -> void:
 			hud.add_log("You hit the %s for %d." % [m.info.name, dmg])
 	else:
 		hud.add_log("You miss the %s." % m.info.name)
-	_end_turn()
+	_hero_done()
 
 
-## A monster next to you attacks (called from Monster.take_turn).
+## A monster next to a hero attacks (called from Monster.take_turn).
+## Next to 2 heroes? It picks one of them at random.
 func monster_attacks(m: Monster) -> void:
-	if not player.active:
+	var targets: Array[Player] = []
+	for h in heroes:
+		if h.active and (h.cell - m.cell).abs().x + (h.cell - m.cell).abs().y == 1:
+			targets.append(h)
+	if targets.is_empty():
 		return
-	if _rolls_hit(0):  # You have no dodge (yet).
+	var target: Player = targets[rng.randi_range(0, targets.size() - 1)]
+	if _rolls_hit(0):  # Heroes have no dodge (yet).
 		var dmg := rng.randi_range(m.info.damage[0], m.info.damage[1])
-		player.hp = maxi(player.hp - dmg, 0)
-		_flash(player)
-		hud.add_log("The %s hits you for %d." % [m.info.name, dmg])
-		if player.hp <= 0:
-			_lose("the " + m.info.name)
+		target.hp = maxi(target.hp - dmg, 0)
+		_flash(target)
+		hud.add_log("The %s hits %s for %d." % [m.info.name, _who(target), dmg])
+		if target.hp <= 0:
+			_lose(target, "the " + m.info.name)
 	else:
-		hud.add_log("The %s misses you." % m.info.name)
+		hud.add_log("The %s misses %s." % [m.info.name, _who(target)])
+
+
+## How the log names a hero: "you" when playing with 1 hero, else "P2" etc.
+func _who(h: Player) -> String:
+	return "you" if heroes.size() == 1 else "P%d" % h.number
 
 
 ## Hit chance = 80% minus the target's dodge. Roll a number from 1 to 100.
@@ -180,9 +289,32 @@ func _kill(m: Monster) -> void:
 
 # --- Turns ---
 
-## Called after every player action (move, wait, drink).
-## Then every awake monster gets exactly 1 action.
+## Called after a hero's action (move, attack, wait, drink).
+## That hero is done for this round. When every living hero is done,
+## the monsters take their turn and a new round starts.
+func _hero_done() -> void:
+	player.done = true
+	if _waiting_for().is_empty():
+		_end_turn()
+	else:
+		_update_view()
+		_refresh_hud()
+
+
+## The living heroes that have not acted yet this round.
+func _waiting_for() -> Array[Player]:
+	var list: Array[Player] = []
+	for h in heroes:
+		if h.active and not h.done:
+			list.append(h)
+	return list
+
+
+## The monsters' turn: every awake monster gets exactly 1 action.
+## Then a new round starts and every hero may act again.
 func _end_turn() -> void:
+	for h in heroes:
+		h.done = false
 	turn += 1
 	_update_view()
 	_wake_monsters()
@@ -194,12 +326,17 @@ func _end_turn() -> void:
 	_refresh_hud()
 
 
-## Like the flood fill check: paint spreads out from the player, and every tile
-## remembers how many steps the paint needed to get there.
+## Like the flood fill check: paint spreads out from every living hero at once,
+## and every tile remembers how many steps the paint needed to get there.
+## So the number is the steps to the NEAREST hero.
 ## A monster just walks to a neighbor tile with a smaller number.
 func _find_paths() -> void:
-	path_dist = {player.cell: 0}
-	var todo: Array[Vector2i] = [player.cell]
+	path_dist = {}
+	var todo: Array[Vector2i] = []
+	for h in heroes:
+		if h.active:
+			path_dist[h.cell] = 0
+			todo.append(h.cell)
 	var i := 0
 	while i < todo.size():
 		var p := todo[i]
@@ -213,16 +350,19 @@ func _find_paths() -> void:
 
 ## True if a monster may step here: no wall, no other monster, not the player.
 func is_free(p: Vector2i) -> bool:
-	return gen.get_tile(p) != DungeonGen.Tile.WALL and p != player.cell and monster_at(p) == null
+	return gen.get_tile(p) != DungeonGen.Tile.WALL and hero_at(p) == null and monster_at(p) == null
 
 
-## A sleeping monster wakes up when you come within its wake range
+## A sleeping monster wakes up when any living hero comes within its wake range
 ## (4 tiles, or 6 for the Bone Warden), counted in a straight line.
 func _wake_monsters() -> void:
 	for m in monsters:
 		if m.awake:
 			continue
-		var dist := Vector2(m.cell - player.cell).length()
+		var dist := INF
+		for h in heroes:
+			if h.active:
+				dist = minf(dist, Vector2(m.cell - h.cell).length())
 		if dist <= m.info.wake:
 			m.awake = true
 			if visible_now.has(m.cell):
@@ -231,22 +371,50 @@ func _wake_monsters() -> void:
 
 ## HP 0: the run is over. Permadeath: next time is a brand new run.
 ## (The full end screen with stats comes in card G5.)
-func _lose(killer: String) -> void:
-	if not player.active:
+## With friends, the run only ends when every hero is down.
+func _lose(hero: Player, killer: String) -> void:
+	if not hero.active:
 		return
-	player.active = false
-	player.modulate = Color("#6b5a4e")  # The hero turns to gray rock color.
-	hud.add_log("You were killed by %s." % killer)
-	hud.show_banner("You died")
+	hero.active = false
+	hero.modulate = Color("#6b5a4e", 0.6)  # A gray see-through ghost.
+	for child in hero.get_children():
+		if child is PointLight2D:
+			child.visible = false  # Its lantern goes out.
+	if heroes.size() == 1:
+		hud.add_log("You were killed by %s." % killer)
+	else:
+		hud.add_log("P%d was killed by %s." % [hero.number, killer])
+	if heroes.all(func(h: Player) -> bool: return not h.active):
+		hud.show_banner("You died")
+	else:
+		_watch_friend()
+
+
+## If the camera is on a fallen hero, it moves to a living friend.
+func _watch_friend() -> void:
+	var watched: Player = camera.get_parent()
+	if watched.active:
+		return
+	for h in heroes:
+		if h.active:
+			camera.reparent(h, false)
+			camera.position = Vector2.ZERO
+			camera.reset_smoothing()
+			return
 
 
 ## You grabbed the relic: the run is over and you won.
 ## (The full end screen with stats comes in card G5.)
+## Anyone grabbing it wins for the whole team, even the fallen heroes.
 func _win() -> void:
-	player.active = false
+	for h in heroes:
+		h.active = false
 	relic.queue_free()
 	relic = null
-	hud.add_log("You grab the Ember Relic!")
+	if heroes.size() == 1:
+		hud.add_log("You grab the Ember Relic!")
+	else:
+		hud.add_log("P%d grabs the Ember Relic! You win together!" % player.number)
 	hud.show_banner("You win!")
 
 
@@ -254,7 +422,7 @@ func _win() -> void:
 
 ## Puts this floor's monsters on random free tiles, never in the room you start in.
 ## Each one is a random type that lives on this floor.
-func _place_monsters() -> void:
+func _place_monsters(floor_rng: RandomNumberGenerator) -> void:
 	for m in monsters:
 		m.queue_free()
 	monsters.clear()
@@ -267,13 +435,13 @@ func _place_monsters() -> void:
 	var start_room := _room_with(gen.start)
 	var taken := floor_items.duplicate()
 	for i in Tune.monsters_per_floor[floor_num - 1]:
-		var cell := gen.random_free_spot(rng, taken)
+		var cell := gen.random_free_spot(floor_rng, taken)
 		while start_room.has_point(cell):
-			cell = gen.random_free_spot(rng, taken)
+			cell = gen.random_free_spot(floor_rng, taken)
 		taken[cell] = true
 		var m := Monster.new()
 		m.game = self
-		m.setup(types[rng.randi_range(0, types.size() - 1)], cell)
+		m.setup(types[floor_rng.randi_range(0, types.size() - 1)], cell)
 		m.visible = false  # Hidden until you see it.
 		monsters_node.add_child(m)
 		monsters.append(m)
@@ -298,12 +466,12 @@ func monster_at(p: Vector2i) -> Monster:
 # --- Potions ---
 
 ## Puts this floor's potions on random free floor tiles.
-func _place_potions() -> void:
+func _place_potions(floor_rng: RandomNumberGenerator) -> void:
 	for sprite in items_node.get_children():
 		sprite.queue_free()
 	floor_items.clear()
 	for kind in potions.by_floor[floor_num - 1]:
-		var cell := gen.random_free_spot(rng, floor_items)
+		var cell := gen.random_free_spot(floor_rng, floor_items)
 		var sprite := Sprite2D.new()
 		sprite.texture = POTION_ART
 		sprite.position = Player.cell_to_pos(cell)
@@ -315,6 +483,10 @@ func _place_potions() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB:
+		get_viewport().set_input_as_handled()
+		_switch_hero()  # TEST ONLY (N1)
+		return
 	for i in Hud.SLOT_COUNT:
 		if event.is_action_pressed("drink_%d" % (i + 1)):
 			get_viewport().set_input_as_handled()
@@ -324,7 +496,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Drinks the potion in slot `index` (0 = slot 1). Now you know what that color does.
 func drink(index: int) -> void:
-	if player.busy or not player.active or index >= player.potions.size():
+	if player.busy or not player.active or player.done or index >= player.potions.size():
 		return
 	var kind: int = player.potions[index]
 	player.potions.remove_at(index)
@@ -348,10 +520,9 @@ func drink(index: int) -> void:
 			hud.add_log("Embers burst around you! -%d HP" % Tune.embers_self_damage)
 			_burn_neighbors()
 			if player.hp <= 0:
-				_lose("your own embers")
-				_refresh_hud()
-				return
-	_end_turn()  # Drinking takes your turn.
+				_lose(player, "their own embers" if heroes.size() > 1 else "your own embers")
+				# No return: the round goes on for the friends who are still alive.
+	_hero_done()  # Drinking takes your turn.
 
 
 ## Embers potion: every monster on the 8 tiles around you takes 6 damage.
@@ -424,9 +595,12 @@ func _pick_up(cell: Vector2i) -> void:
 
 ## Stairs: go 1 floor deeper. Every floor is brand new.
 ## The last floor has no stairs (the relic is there instead).
+## With friends: 1 hero on the stairs takes the whole team down (ghosts too).
 func _go_down() -> void:
 	floor_num += 1
 	_new_floor()
+	if heroes.size() > 1:
+		hud.add_log("P%d found the stairs. The team goes down together." % player.number)
 	if floor_num == Tune.floor_count:
 		hud.add_log("You go down to floor %d. The relic is near..." % floor_num)
 	else:
@@ -434,14 +608,28 @@ func _go_down() -> void:
 
 
 func _refresh_hud() -> void:
-	hud.show_stats(player, floor_num)
+	var waiting := ""
+	var watched: Player = camera.get_parent()
+	if watched != player:
+		waiting = "You are down. Watching P%d" % watched.number
+	elif player.done:
+		var names: Array[String] = []
+		for h in _waiting_for():
+			names.append("P%d" % h.number)
+		waiting = "Waiting for " + ", ".join(names)
+	hud.show_stats(player, floor_num, waiting)
 	hud.show_slots(player.potions, potions)
 
 
-## Works out what the player can see, then redraws.
+## Works out what the heroes can see, then redraws.
+## Shared vision: you see everything any living hero's lantern lights.
 ## Fog has 3 looks: clear = you see it now, dim = you saw it before, black = never seen.
 func _update_view() -> void:
-	visible_now = Fov.compute(gen, player.cell, Tune.sight_radius)
+	visible_now = {}
+	var anyone_alive := heroes.any(func(h: Player) -> bool: return h.active)
+	for h in heroes:
+		if h.active or not anyone_alive:  # Game over: show what everyone saw last.
+			visible_now.merge(Fov.compute(gen, h.cell, Tune.sight_radius))
 	tiles.clear()
 	for p in visible_now:
 		_draw_tile(tiles, p)

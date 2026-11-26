@@ -5,10 +5,21 @@
 ## Basics
 - 2D, turn-based dungeon crawler, seen from the top. The camera follows the player.
 - Grid of 16×16 pixel tiles. Move in 4 directions.
-- Players: 1.
+- Players: 1–4. Play solo, or online co-op with GD-Sync: everyone is in the same cave.
+
+## Co-op
+- The host's game makes one seed number for the run. Every floor, its monsters and its potions come from it, so everyone gets the same cave.
+- The host is the boss: it checks every move, runs the monsters, and tells everyone what happened.
+- Friends join with a 4-digit room code. No names, no chat. Heroes are P1–P4 in palette colors.
+- Shared vision: you see what any hero's lantern lights.
+- 1 hero on the stairs = the whole team goes down.
+- XP goes to whoever lands the kill. Potions go to whoever steps on them. Learned potion names are known by everyone.
+- +2 monsters per floor for each extra player.
+- Win together: anyone grabs the relic. A dead hero turns gray and watches a living friend. Everyone dead = you lose.
+- If a player leaves, their hero goes away. If the host leaves, the game ends ("Host left").
 
 ## Turns and combat
-- You do 1 action. Then every awake monster does 1 action.
+- Every living hero does 1 action, in any order. Then every awake monster does 1 action.
 - Bump into a monster to attack it.
 - Chance to hit = 80% − the target's dodge. Damage is a range (for example 1–3).
 
