@@ -30,7 +30,7 @@
 ## v0.1 (first playable)
 - **Island:** 160×160 m, water around the edge, 2 spots with box buildings, trees, rocks
 - **Drop:** start high in the sky, glide down (8 m/s down, 10 m/s steer)
-- **Move:** run 6 m/s, jump 1.2 m
+- **Move:** run 7 m/s, jump 1.2 m
 - **Pickaxe:** +10 material per hit (max 300)
 - **Build:** Wall only. 10 material, 4 m grid snap, 150 HP, blocks shots, green/red ghost piece
 - **Gun:** Burst rifle (3×12 dmg, burst every 0.6 s, mag 15, 60 m, reload 1.8 s), unlimited ammo with reloads

@@ -15,6 +15,7 @@ radius = 0.4
 height = 1.8
 
 [node name="Player" type="CharacterBody3D"]
+collision_mask = 3
 script = ExtResource("1_player")
 
 [node name="Body" type="MeshInstance3D" parent="."]
@@ -24,3 +25,18 @@ mesh = SubResource("body_mesh")
 [node name="Shape" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("body_shape")
+
+[node name="CamYaw" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="CamPitch" type="Node3D" parent="CamYaw"]
+
+[node name="SpringArm" type="SpringArm3D" parent="CamYaw/CamPitch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0, 0)
+spring_length = 3.5
+margin = 0.2
+
+[node name="Camera" type="Camera3D" parent="CamYaw/CamPitch/SpringArm"]
+current = true
+fov = 75.0
+far = 1000.0

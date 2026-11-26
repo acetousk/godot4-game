@@ -8,7 +8,7 @@ G2 core loop: island, player, movement, camera, glide start.
 |---|---|---|---|---|
 | ✓ | G1 Design + scope | Kid's answers | `DESIGN.md` | Kid says it matches |
 | ✓ | G2a World + player | `DESIGN.md` | `scripts/tune.gd`, `scenes/main.tscn`, `scenes/player.tscn`, `scripts/player.gd`, `project.godot`, `PLAN.md` | You run and jump on the island with keyboard or gamepad |
-|  | G2b Camera + drop | G2a | `scenes/player.tscn`, `scripts/player.gd`, `scenes/main.tscn`, `scripts/tune.gd` | You glide down from 80 m, land, look, zoom, and can't leave the island |
+| ✓ | G2b Camera + drop | G2a | `scenes/player.tscn`, `scripts/player.gd`, `scenes/main.tscn`, `scripts/tune.gd` | You glide down from 80 m, land, look, zoom, and can't leave the island |
 |  | G3 Goal | G2 | chests, rifle, bots to eliminate | — |
 |  | G4 Pressure | G3 | storm | — |
 |  | G5 Online | G4 | `scripts/net.gd` | — |

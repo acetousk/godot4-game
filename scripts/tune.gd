@@ -2,7 +2,7 @@ extends Node
 ## Tune: every feel number in the game. Change these to change how it feels.
 
 @export_group("Moving")
-@export var run_speed: float = 6.0 ## How fast you run, in meters per second
+@export var run_speed: float = 7.0 ## How fast you run, in meters per second
 @export var jump_height: float = 1.2 ## How high a jump goes, in meters
 @export var gravity: float = 20.0 ## How hard you fall (higher = snappier jumps)
 
