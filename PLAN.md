@@ -18,4 +18,4 @@ Before N2: the kid pastes the GD-Sync **Clients** docs page and finds out if GD-
 |   | G6 Ship (5 steps): 1 potion names under the slots ("Red?" → "Healing"), 2 title + icon, 3 speed check (web, phone) — moved to after the release, on the real web link and the kid's phone, 4 `CHANGELOG.md` + `README.md`, 5 ask to tag `v0.1.0` | G5 | `hud.gd`, `tools/print_cave.gd`, `project.godot`, `icon.svg`, `CHANGELOG.md`, `README.md`, `PLAN.md`, `PLAYTEST.md` | Potion names show on every platform, title + icon say Lantern Deep, it runs smoothly on web (and phone if possible), and you are asked to tag `v0.1.0` |
 
 ## Bugs
-- (none yet)
+- B1 (v0.1.0): in a wide window the camera stops at the cave edges, so the cave sits on the right and the hero isn't centered. Fix: no camera limits, the camera always centers on the hero. Output: `game.gd`, `tools/print_cave.gd`, `CHANGELOG.md`. Done when: the hero is in the middle on the web link → ask to tag `v0.1.1`.

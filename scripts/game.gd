@@ -996,10 +996,8 @@ func _setup_lantern() -> void:
 ## The camera rides on the player, zoomed in, and stops at the edges of the cave.
 func _setup_camera() -> void:
 	camera.zoom = Vector2.ONE * Tune.camera_zoom
-	camera.limit_left = 0
-	camera.limit_top = 0
-	camera.limit_right = gen.width * TILE
-	camera.limit_bottom = gen.height * TILE
+	# No camera limits: your hero always stays in the middle of the screen,
+	# even in a wide window. Past the cave edge it is just black, like unseen rock.
 	camera.reset_smoothing()
 
 

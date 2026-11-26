@@ -458,6 +458,18 @@ func _ready() -> void:
 		", after drinking: ", name_after, ", empty slot: '", empty_name, "'")
 	game._on_play_again()
 
+	# Test: the camera keeps the hero in the middle, even in the cave's top-left corner.
+	var keep_pos: Vector2 = game.player.position
+	game.player.position = Vector2(8, 8)
+	game.camera.make_current()  # The test has several games; use this one's camera.
+	game.camera.reset_smoothing()
+	game.camera.force_update_scroll()
+	var center: Vector2 = game.camera.get_screen_center_position()
+	print("Camera test: hero in the middle at the corner: ", center.distance_to(game.player.global_position) < 1.0,
+		" (center ", center, ", hero ", game.player.global_position, ")")
+	game.player.position = keep_pos
+	game.camera.reset_smoothing()
+
 	# Test: tapping tiles. Middle of the tile to the left = step left, on me = wait, far = nothing.
 	var me: Vector2 = Player.cell_to_pos(game.player.cell)
 	print("Tap test: left: ", game.tap_action(me + Vector2(-16, 0)), ", below: ", game.tap_action(me + Vector2(0, 16)),

@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.1.1 (2026-11-25)
+- Fix: the camera always keeps your hero in the middle of the screen. Before, in a wide window, the cave sat on the right and half the screen was empty.
+
 ## v0.1.0 (2026-11-25): first playable
 - 3 cave floors, made new every run from a seed. Fog of war and a lantern light.
 - Turn-based moves and bump-to-attack fights. Monsters: Mire Slime, Cave Moth, Bone Warden.
