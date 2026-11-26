@@ -13,6 +13,22 @@ extends Node
 @export var aim_fov: float = 45.0 ## How wide the camera sees when aiming (lower = more zoom)
 @export var aim_look_slow: float = 0.5 ## Look speed while aiming (0.5 = half speed)
 
+@export_group("Loot")
+@export var chest_open_time: float = 0.5 ## Seconds you hold the action button to open a chest
+@export var max_heal_kits: int = 2 ## Most heal kits you can carry
+@export var heal_amount: float = 50.0 ## HP one heal kit gives back
+@export var heal_time: float = 3.0 ## Seconds a heal kit takes to finish
+@export var max_hp: float = 100.0 ## Most HP anyone can have
+
+@export_group("Burst rifle")
+@export var rifle_mag: int = 15 ## Shots in one magazine before you reload
+@export var rifle_damage: int = 12 ## Damage from one bullet
+@export var rifle_burst_shots: int = 3 ## Bullets in one burst
+@export var rifle_burst_gap: float = 0.07 ## Seconds between bullets inside a burst
+@export var rifle_fire_every: float = 0.6 ## Seconds from one burst to the next
+@export var rifle_range: float = 60.0 ## How far a bullet reaches, in meters
+@export var rifle_reload_time: float = 1.8 ## Seconds to reload
+
 @export_group("Drop")
 @export var drop_height: float = 80.0 ## How high you start in the sky, in meters
 @export var glide_fall: float = 8.0 ## How fast you sink while gliding, in meters per second

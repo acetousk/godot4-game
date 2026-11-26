@@ -15,6 +15,7 @@
 | Jump | Space | A | Jump button |
 | Fire / harvest | Left click | RT | Fire button |
 | Aim | Right click | LT | Aim button |
+| Reload | R (or auto when empty) | RB | Auto when empty |
 | Build mode | Q | Y | Build button |
 | Action (open chest) | Hold E | X | Action button |
 | Heal | H | B | Heal button |

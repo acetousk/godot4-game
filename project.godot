@@ -76,6 +76,24 @@ fire={
 , Object(InputEventJoypadMotion,"device":-1,"axis":5,"axis_value":1.0,"script":null)
 ]
 }
+action={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":69,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadButton,"device":-1,"button_index":2,"pressed":true,"script":null)
+]
+}
+reload={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":82,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadButton,"device":-1,"button_index":10,"pressed":true,"script":null)
+]
+}
+heal={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":72,"pressed":false,"echo":false,"script":null)
+, Object(InputEventJoypadButton,"device":-1,"button_index":1,"pressed":true,"script":null)
+]
+}
 aim={
 "deadzone": 0.2,
 "events": [Object(InputEventMouseButton,"device":-1,"button_index":2,"pressed":true,"script":null)

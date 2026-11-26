@@ -9,7 +9,9 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G1 Design + scope | Kid's answers | `DESIGN.md` | Kid says it matches |
 | ✓ | G2a World + player | `DESIGN.md` | `scripts/tune.gd`, `scenes/main.tscn`, `scenes/player.tscn`, `scripts/player.gd`, `project.godot`, `PLAN.md` | You run and jump on the island with keyboard or gamepad |
 | ✓ | G2b Camera + drop | G2a | `scenes/player.tscn`, `scripts/player.gd`, `scenes/main.tscn`, `scripts/tune.gd` | You glide down from 80 m, land, look, zoom, and can't leave the island |
-|  | G3 Goal | G2 | chests, rifle, bots to eliminate | — |
+| ✓ | G3a Loot + rifle | G2 | `scenes/main.tscn`, `scenes/chest.tscn`, `scripts/chest.gd`, `scripts/player.gd`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd`, `project.godot`, `DESIGN.md` | You open a chest, shoot a target, reload, and heal |
+|  | G3b Bots + win | G3a | `scenes/bot.tscn`, `scripts/bot.gd`, `scripts/health.gd`, `scripts/game.gd`, `scenes/main.tscn`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd` | 3 bots roam and fight; you win when last one left, lose at 0 HP |
+|  | Build | G3 | pickaxe, material, Wall | — |
 |  | G4 Pressure | G3 | storm | — |
 |  | G5 Online | G4 | `scripts/net.gd` | — |
 |  | G6 Flow + sound + touch | G5 | screens, `tools/make_sfx.py`, touch | — |
@@ -29,6 +31,22 @@ G2 core loop: island, player, movement, camera, glide start.
 9. Glide start at 80 m
 10. Invisible edge walls
 11. Tune pass
+
+### G3a steps
+1. 2 box buildings, 10 trees, 8 rocks
+2. 6 chests: hold E 0.5 s → rifle + heal kit
+3. HUD: HP, ammo, heal kits, crosshair
+4. Burst rifle: 3 × 12, 60 m, every 0.6 s, mag 15
+5. Reload: R / RB or auto, 1.8 s
+6. Heal kit: H / B, +50 HP over 3 s
+
+### G3b steps
+7. Navigation + 3 bots roam
+8. Bot sight 50 m + shooting (30–60% accuracy)
+9. Shared health: 0 HP → out
+10. HUD: players left
+11. Win / lose message + restart
+12. Tune pass (bot aim)
 
 ## Bugs
 (none yet)
