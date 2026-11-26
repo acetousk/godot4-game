@@ -34,7 +34,7 @@ func _ready() -> void:
 
 	# Test: monster counts and types per floor (100 runs of each floor).
 	var game0 = load("res://scenes/game.tscn").instantiate()
-	game0.test_heroes = 1  # The solo tests. The team tests below get their own game.
+	game0.hero_count = 1  # The solo tests. The team tests below get their own game.
 	add_child(game0)
 
 	# Test: seeds. Same seed = the same run (all 3 floors), even after a fight. Other seed = different.
@@ -50,9 +50,24 @@ func _ready() -> void:
 		runs.append(print_out)
 	print("Seed test: same seed same run: ", runs[0] == runs[1], ", other seed different: ", runs[0] != runs[2])
 
+	# Test: a co-op start, like a joiner (P2) who got seed 1234 from the host.
+	Net.players.assign([111, 222])
+	Net.my_index = 1
+	Net.run_seed = 1234
+	Net.in_coop = true
+	var coop = load("res://scenes/game.tscn").instantiate()
+	add_child(coop)
+	game0.start_run(1234)
+	print("Co-op start test: 2 heroes: ", coop.heroes.size() == 2, ", I control P2: ", coop.heroes[1].controlled and not coop.heroes[0].controlled,
+		", same cave as host: ", _floor_print(coop) == _floor_print(game0))
+	Net.in_coop = false
+	Net.players.clear()
+	Net.my_index = 0
+	coop.queue_free()
+
 	# --- Team tests: a game with 2 heroes ---
 	var team = load("res://scenes/game.tscn").instantiate()
-	team.test_heroes = 2
+	team.hero_count = 2
 	add_child(team)
 
 	# Test: heroes. All in the start room, on different tiles. Tab moves your keys and the camera.
@@ -141,7 +156,7 @@ func _ready() -> void:
 
 	# Test: win together. P2 falls on floor 3, then P1 grabs the relic: the whole team wins.
 	var team2 = load("res://scenes/game.tscn").instantiate()
-	team2.test_heroes = 2
+	team2.hero_count = 2
 	add_child(team2)
 	team2._go_down()
 	team2._go_down()
@@ -270,7 +285,7 @@ func _ready() -> void:
 
 	# Test: step on the stairs twice, and check we end on the last floor with no stairs.
 	var game = load("res://scenes/game.tscn").instantiate()
-	game.test_heroes = 1  # These tests play solo.
+	game.hero_count = 1  # These tests play solo.
 	add_child(game)
 	for i in Tune.floor_count - 1:
 		game._on_player_moved(game.gen.goal)

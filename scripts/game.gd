@@ -24,9 +24,8 @@ const HERO_ART := preload("res://art/player.png")
 ## Each hero's color (Ember Cave palette): P1 normal, P2 green, P3 orange, P4 yellow.
 const HERO_TINTS := [Color.WHITE, Color("#7fae5a"), Color("#f2a33a"), Color("#ffd966")]
 
-## TEST ONLY (card N1): how many heroes you get when playing alone.
-## Tab switches which hero you move. Goes back to 1 when the online menu comes (N2).
-@export var test_heroes := 2
+## How many heroes are in the run: 1 solo, 2-4 in co-op.
+@export var hero_count := 1
 
 ## All heroes in the run (1-4). heroes[0] is the Player node in the scene.
 var heroes: Array[Player] = []
@@ -62,9 +61,15 @@ func _ready() -> void:
 	var b := Tune.remembered_brightness
 	remembered.modulate = Color(b, b, b)
 	_setup_lantern()
-	_make_heroes(test_heroes)
+	if Net.in_coop:
+		hero_count = Net.players.size()
+	_make_heroes(hero_count)
 	hud.slot_pressed.connect(drink)
-	start_run(rng.randi())
+	if Net.in_coop:
+		_control(heroes[Net.my_index])  # My keys move my own hero.
+		start_run(Net.run_seed)  # The host's seed: the same cave for everyone.
+	else:
+		start_run(rng.randi())
 
 
 ## Starts a run from a seed number. The same seed always makes the same run.
@@ -154,7 +159,7 @@ func _start_spots(count: int) -> Array[Vector2i]:
 	return cells.slice(0, count)
 
 
-## TEST ONLY (N1): Tab moves your keys (and the camera) to the next living hero.
+## TEST ONLY (used by tools/print_cave): moves your keys and the camera to the next living hero.
 func _switch_hero() -> void:
 	if player.busy:
 		return
@@ -162,15 +167,20 @@ func _switch_hero() -> void:
 	for step in range(1, heroes.size()):
 		var next := heroes[(i + step) % heroes.size()]
 		if next.active:
-			player.controlled = false
-			player = next
-			player.controlled = true
-			camera.reparent(player, false)
-			camera.position = Vector2.ZERO
-			camera.reset_smoothing()
+			_control(next)
 			_update_view()
 			_refresh_hud()
 			return
+
+
+## Makes this hero the one your keys move, and puts the camera on it.
+func _control(hero: Player) -> void:
+	player.controlled = false
+	player = hero
+	player.controlled = true
+	camera.reparent(player, false)
+	camera.position = Vector2.ZERO
+	camera.reset_smoothing()
 
 
 func _on_player_moved(cell: Vector2i) -> void:
@@ -483,10 +493,6 @@ func _place_potions(floor_rng: RandomNumberGenerator) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_TAB:
-		get_viewport().set_input_as_handled()
-		_switch_hero()  # TEST ONLY (N1)
-		return
 	for i in Hud.SLOT_COUNT:
 		if event.is_action_pressed("drink_%d" % (i + 1)):
 			get_viewport().set_input_as_handled()
