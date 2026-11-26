@@ -5,6 +5,7 @@ extends Node
 
 signal status_changed(text: String)
 signal room_changed
+signal player_left(client_id: int)
 
 const MAX_PLAYERS := 4
 
@@ -24,8 +25,13 @@ func _ready() -> void:
 	GDSync.lobby_join_failed.connect(_on_lobby_join_failed)
 	GDSync.client_joined.connect(_on_players_changed)
 	GDSync.client_left.connect(_on_players_changed)
+	GDSync.client_left.connect(player_left.emit)
 	GDSync.change_scene_called.connect(_on_match_starting)
 	start()
+	# Only for tools/net_test.py: a robot that hosts or joins by itself.
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--net-test="):
+			add_child(load("res://tools/net_test.gd").new())
 
 
 ## Connect to GD-Sync. Local mode in the editor, online mode in builds.
@@ -48,11 +54,13 @@ func player_count() -> int:
 
 
 ## Make a new room with a random 4-digit code, then join it.
-func host_room() -> void:
+## (The net test picks the code itself.)
+func host_room(code := "") -> void:
 	if not connected:
 		_set_status("Not connected yet, wait a second")
 		return
-	var code := str(randi_range(1000, 9999))
+	if code == "":
+		code = str(randi_range(1000, 9999))
 	_set_status("Making room %s…" % code)
 	# Private (not listed), max 4 players. You join with the code.
 	GDSync.lobby_create(code, "", false, MAX_PLAYERS)
@@ -90,6 +98,7 @@ func start_match() -> void:
 
 func _on_match_starting(_path: String) -> void:
 	online = true
+	GDSync.expose_func(_relay) # Others may send the host their "_ask_" requests.
 
 
 ## Everyone in the room, by their client ID.
@@ -102,14 +111,79 @@ func spawn_for_everyone(scene: PackedScene, parent: Node) -> Node:
 	return GDSync.multiplayer_instantiate(scene, parent)
 
 
+## Host only: remove a node from every screen. In solo, just here.
+func remove_for_everyone(node: Node) -> void:
+	if online:
+		GDSync.multiplayer_queue_free(node)
+	else:
+		node.queue_free()
+
+
 ## Host only: say which person controls this node.
 func give_to(node: Node, client_id: int) -> void:
 	GDSync.set_gdsync_owner(node, client_id)
 
 
+## The client ID of the person who controls this node (-1 = nobody).
+func owner_of(node: Node) -> int:
+	return GDSync.get_gdsync_owner(node)
+
+
+## After an online match: leave the room (you can host or join a new one).
+func leave_room() -> void:
+	if room_code != "":
+		GDSync.lobby_leave()
+	room_code = ""
+	online = false
+	_set_status("Connected (%s)" % ("local" if is_local() else "online"))
+
+
 ## True if this node is yours to control. In solo, everything is yours.
 func is_mine(node: Node) -> bool:
 	return not online or GDSync.is_gdsync_owner(node)
+
+
+## Your client ID (0 in solo).
+func my_id() -> int:
+	return GDSync.get_client_id() if online else 0
+
+
+## Let other screens call this function on this node.
+## host_only = only the host may call it (for things only the host decides).
+func allow(callable: Callable, host_only := false) -> void:
+	if online:
+		var who := ENUMS.EXPOSE_PERMISSION.HOST if host_only else ENUMS.EXPOSE_PERMISSION.ANYONE
+		GDSync.expose_func(callable, who)
+
+
+## Ask the host to run this. In solo (or if you are the host) it runs right here.
+## Only for functions whose name starts with "_ask_".
+## We send it to everyone and only the host does it: GD-Sync's "send to one
+## player" loses the message when the host's ID number is too big (local mode).
+func tell_host(callable: Callable, ...args: Array) -> void:
+	if not online or GDSync.is_host():
+		callable.callv(args)
+	else:
+		var node: Node = callable.get_object()
+		GDSync.call_func(_relay, str(node.get_path()), callable.get_method(), args)
+
+
+## Runs on every other screen; only the host does the request.
+func _relay(path: String, method: String, args: Array) -> void:
+	if not GDSync.is_host() or not method.begins_with("_ask_"):
+		return
+	print("Net: request %s on %s" % [method, path])
+	var node := get_node_or_null(path)
+	if node and node.has_method(method):
+		node.callv(method, args)
+
+
+## Host: run this on every screen, your own too.
+func tell_everyone(callable: Callable, ...args: Array) -> void:
+	if not online:
+		callable.callv(args)
+	else:
+		GDSync.call_func_all.callv([callable] + args)
 
 
 func _on_connected() -> void:

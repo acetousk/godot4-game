@@ -45,6 +45,7 @@ func _ready() -> void:
 	camera.current = false
 	set_physics_process(false)
 	set_process_unhandled_input(false)
+	_net_ready()
 	# The selfie stick must not bump into your own body.
 	spring_arm.add_excluded_object(get_rid())
 	# The ghost wall is one build square wide and tall.
@@ -69,13 +70,25 @@ func become_local() -> void:
 	camera.make_current()
 	set_physics_process(true)
 	set_process_unhandled_input(true)
-	set_process(false)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Online: wait until the host says this player is yours.
 	if not is_local and not is_out and Net.online and Net.is_mine(self):
 		become_local()
+	# The host owns HP, so the host also runs healing (HpSync sends it back).
+	if Net.is_host() and heal_left > 0.0:
+		var step := minf(Tune.heal_amount / Tune.heal_time * delta, heal_left)
+		heal_left -= step
+		hp = minf(hp + step, Tune.max_hp)
+		if hp >= Tune.max_hp:
+			heal_left = 0.0
+
+
+## Runs on the host: start healing this player.
+func _ask_heal() -> void:
+	if not is_out:
+		heal_left = Tune.heal_amount
 
 
 ## When you are out: hide your body and stop moving. The camera stays.
@@ -125,8 +138,11 @@ func _shoot_bullet() -> void:
 	if hit.is_empty():
 		return
 	# Whatever the line touches first takes the damage (if it can).
-	if hit.collider.has_method("take_damage"):
-		hit.collider.take_damage(Tune.rifle_damage, self)
+	# Players and bots: "I hit you" goes to the host, who takes the HP.
+	if hit.collider is Fighter:
+		hit.collider.hurt(Tune.rifle_damage, self)
+	elif hit.collider.has_method("take_damage"):
+		hit.collider.take_damage(Tune.rifle_damage, self) # Walls ask the host too
 
 
 ## Pickaxe swing: a short line from your chest the way the camera looks.
@@ -166,12 +182,22 @@ func _update_ghost() -> void:
 	ghost_mat.albedo_color = GHOST_OK if can_build else GHOST_NO
 
 
-## Turn the ghost into a real wall.
+## Turn the ghost into a real wall: pay, then ask the host to build it.
 func _place_wall() -> void:
 	material -= Tune.wall_cost
-	var wall: Node3D = WALL_SCENE.instantiate()
-	get_tree().current_scene.add_child(wall)
-	wall.global_transform = ghost.global_transform
+	Net.tell_host(_ask_wall, ghost.global_transform)
+
+
+## Runs on the host: make the wall on every screen.
+func _ask_wall(spot: Transform3D) -> void:
+	var walls := get_tree().current_scene.get_node("Walls")
+	var wall: Node3D
+	if Net.online:
+		wall = Net.spawn_for_everyone(WALL_SCENE, walls)
+	else:
+		wall = WALL_SCENE.instantiate()
+		walls.add_child(wall)
+	wall.transform = spot # Walls sits at the middle of the world, so this is the same spot.
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -228,16 +254,10 @@ func _physics_process(delta: float) -> void:
 		elif ammo < Tune.rifle_mag and (Input.is_action_just_pressed("reload") or (ammo == 0 and fire_cooldown <= 0.0)):
 			_reload()
 
-	# Heal: use a kit if you have one and are hurt. HP comes back bit by bit.
+	# Heal: use a kit if you have one and are hurt. The host gives HP back bit by bit.
 	if Input.is_action_just_pressed("heal") and heal_kits > 0 and heal_left <= 0.0 and hp < Tune.max_hp:
 		heal_kits -= 1
-		heal_left = Tune.heal_amount
-	if heal_left > 0.0:
-		var step := minf(Tune.heal_amount / Tune.heal_time * delta, heal_left)
-		heal_left -= step
-		hp = minf(hp + step, Tune.max_hp)
-		if hp >= Tune.max_hp:
-			heal_left = 0.0
+		Net.tell_host(_ask_heal)
 
 	# Aim: zoom the camera in smoothly while held, back out when let go.
 	var target_fov := Tune.aim_fov if Input.is_action_pressed("aim") else Tune.normal_fov

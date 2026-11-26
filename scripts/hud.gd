@@ -16,9 +16,10 @@ func _ready() -> void:
 
 
 ## Show the end-of-match message.
-func show_end(title: String, stats: String) -> void:
+func show_end(title: String, stats: String, hint: String) -> void:
 	$End/Title.text = title
 	$End/Stats.text = stats
+	$End/Hint.text = hint
 	end_box.visible = true
 
 

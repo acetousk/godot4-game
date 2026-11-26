@@ -15,6 +15,7 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G4 Storm | G3 | `scripts/storm.gd`, `scenes/main.tscn`, `scripts/tune.gd`, `scripts/bot.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `PLAN.md` | Storm waits, shrinks to 0, hurts anyone outside (more as it shrinks), bots run inside, HUD shows the timer |
 | ✓ | G5a Lobby + see each other | G4, B1, GD-Sync docs | `scripts/net.gd`, `scenes/lobby.tscn`, `scripts/lobby.gd`, `scripts/game.gd`, `scripts/player.gd`, `scenes/player.tscn`, `scenes/main.tscn`, `project.godot`, `PLAN.md` | 2 windows join the same 4-digit room and see each other run and glide |
 |  | G5b Host runs the match | G5a | `scripts/net.gd`, `scripts/game.gd`, `scripts/bot.gd`, `scripts/storm.gd`, `scripts/chest.gd`, `scripts/player.gd`, `scripts/health.gd`, `scripts/wall.gd`, scenes, `PLAN.md`, `DESIGN.md` | 2 windows see the same bots, storm, chests; shots and walls work for both; one shared winner |
+| ✓ | T1 Net test | G5b | `tools/net_test.py`, `tools/net_test.gd`, `scripts/net.gd` | `python3 tools/net_test.py` prints a ✅/❌ list comparing host and joiner |
 |  | G6 Flow + sound + touch | G5 | screens, `tools/make_sfx.py`, touch | — |
 |  | G7 Ship | G6 | title, icon, `CHANGELOG.md`, `v0.1.0` | — |
 
@@ -79,5 +80,14 @@ G2 core loop: island, player, movement, camera, glide start.
 9. Win / lose: host decides; each screen shows its own place
 10. 2-window test + Tune pass
 
+### T1 steps
+1. Test driver: host makes a room, joiner joins, host starts
+2. Joiner actions: open a chest, build a wall, shoot a bot
+3. Snapshots at 10 / 30 / 60 s into a file
+4. `net_test.py` runs both and prints ✅ / ❌
+
 ## Bugs
+- Local mode floods Output with "Key must not be empty" (GD-Sync `_unreliable_mac` has no key in local mode; packets still work). Fix idea: send synced spots reliably in local mode only.
+- Fixed (T1): joiner's chest/wall requests were lost. GD-Sync's send-to-one-player keeps only 30 bits of the host's ID. Now `Net.tell_host` sends to everyone and only the host acts.
+- Fixed (T1): joiner never got control of their player. The host said "this one is yours" before the player existed on the joiner's screen. Now the host waits 1 s first.
 - Bots don't path around built walls (map is baked at start). Fix with the smart bots card.

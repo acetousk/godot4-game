@@ -51,6 +51,9 @@ extends Node
 @export var storm_dps_start: float = 2.0 ## HP per second lost outside the circle at the start
 @export var storm_dps_end: float = 10.0 ## HP per second lost outside the circle when it is fully closed
 
+@export_group("Online")
+@export var net_send_rate: int = 20 ## How many times a second player and bot spots are sent to the others (higher = smoother, more data)
+
 @export_group("Drop")
 @export var drop_height: float = 80.0 ## How high you start in the sky, in meters
 @export var glide_fall: float = 8.0 ## How fast you sink while gliding, in meters per second

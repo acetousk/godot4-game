@@ -1,5 +1,6 @@
-[gd_scene load_steps=35 format=3]
+[gd_scene load_steps=36 format=3]
 
+[ext_resource type="Script" path="res://addons/GD-Sync/Scripts/Types/PropertySynchronizer.gd" id="6_sync"]
 [ext_resource type="PackedScene" path="res://scenes/chest.tscn" id="2_chest"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_hud"]
 [ext_resource type="Script" path="res://scripts/game.gd" id="4_game"]
@@ -534,11 +535,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.2, -30)
 
 [node name="Players" type="Node3D" parent="."]
 
+[node name="Bots" type="Node3D" parent="."]
+
+[node name="Walls" type="Node3D" parent="."]
+
 [node name="Storm" type="Node3D" parent="."]
 script = ExtResource("5_storm")
 
 [node name="Wall" type="MeshInstance3D" parent="Storm"]
 mesh = SubResource("storm_mesh")
 cast_shadow = 0
+
+[node name="StormSync" type="Node" parent="Storm"]
+script = ExtResource("6_sync")
+refresh_rate = 5
+node_path = NodePath("..")
+properties = PackedStringArray("center", "time")
+interpolated = true
+interpolation_speed = 5.0
 
 [node name="HUD" parent="." instance=ExtResource("3_hud")]

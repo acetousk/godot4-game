@@ -24,11 +24,16 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	time += delta
+	# Online: only the host runs the storm clock. Other screens get its
+	# center and time from the host (StormSync) and draw the same circle.
+	if Net.is_host():
+		time += delta
 	# First wait, then shrink smoothly from the start size down to 0.
 	shrinking = time > Tune.storm_wait
 	radius = Tune.storm_start_radius * (1.0 - shrink_part())
 	_update_wall()
+	if not Net.is_host():
+		return
 
 	# Once a second: hurt everyone outside. Smaller circle = more damage.
 	tick += delta

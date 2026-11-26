@@ -23,6 +23,7 @@ func _ready() -> void:
 	add_to_group("bot")
 	add_to_group("fighter")
 	ammo = Tune.rifle_mag
+	_net_ready()
 	# Wait one frame so the island map is ready, then pick a place to walk to.
 	await get_tree().physics_frame
 	_pick_roam_point()
@@ -67,6 +68,9 @@ func _look_for_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Online: only the host runs the bot brain. Other screens copy where it is.
+	if not Net.is_host():
+		return
 	if not is_on_floor():
 		velocity.y -= Tune.gravity * delta
 
@@ -150,5 +154,5 @@ func _shoot_bullet() -> void:
 	if randf() > accuracy:
 		return
 	if _can_see(target):
-		if target.has_method("take_damage"):
-			target.take_damage(Tune.rifle_damage, self)
+		if target is Fighter:
+			target.hurt(Tune.rifle_damage, self)

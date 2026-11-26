@@ -53,6 +53,13 @@ properties = PackedStringArray("position")
 interpolated = true
 interpolation_speed = 20.0
 
+[node name="HpSync" type="Node" parent="."]
+script = ExtResource("2_sync")
+refresh_rate = 10
+node_path = NodePath("..")
+reliable = true
+properties = PackedStringArray("hp", "heal_left")
+
 [node name="CamYaw" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
