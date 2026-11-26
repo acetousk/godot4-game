@@ -16,8 +16,10 @@ signal player_left(index: int)
 signal room_closed
 
 ## true = local network only: no key needed, no data used. Good for testing.
-## false = online through the GD-Sync servers (needs the key in Project > Tools > GD-Sync).
-const LOCAL := true
+## false = online through the GD-Sync servers (needs the key; the release gets it from GitHub secrets).
+## F5 in Godot = local (2-window tests). The web link and downloads = online
+## (browsers can't do local mode).
+var LOCAL := OS.has_feature("editor")
 const MAX_PLAYERS := 4
 
 ## True after GD-Sync says we are connected.
@@ -241,9 +243,11 @@ func _on_connection_failed(error: int) -> void:
 	online = false
 	match error:
 		ENUMS.CONNECTION_FAILED.INVALID_PUBLIC_KEY:
-			_set_status("Can't connect: the GD-Sync key is wrong or missing (ask your parent).")
+			_set_status("Online co-op isn't ready yet (no GD-Sync key). Play Solo for now.")
 		ENUMS.CONNECTION_FAILED.TIMEOUT:
 			_set_status("Can't connect: check your internet.")
+		ENUMS.CONNECTION_FAILED.LOCAL_PORT_ERROR:
+			_set_status("Can't start co-op on this device. Play Solo for now.")
 		_:
 			_set_status("Can't connect (error %d)." % error)
 

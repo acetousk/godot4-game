@@ -470,6 +470,16 @@ func _ready() -> void:
 	game.player.position = keep_pos
 	game.camera.reset_smoothing()
 
+	# Test: local mode in Godot, plain words when co-op can't connect.
+	var keep_status: String = Net.status
+	Net._on_connection_failed(ENUMS.CONNECTION_FAILED.INVALID_PUBLIC_KEY)
+	var no_key_msg: String = Net.status
+	Net._on_connection_failed(ENUMS.CONNECTION_FAILED.LOCAL_PORT_ERROR)
+	var port_msg: String = Net.status
+	Net.status = keep_status
+	print("Connect test: local in Godot: ", Net.LOCAL, ", no key: ", no_key_msg, " | port: ", port_msg,
+		" | no 'error': ", not ("error" in no_key_msg or "error" in port_msg))
+
 	# Test: tapping tiles. Middle of the tile to the left = step left, on me = wait, far = nothing.
 	var me: Vector2 = Player.cell_to_pos(game.player.cell)
 	print("Tap test: left: ", game.tap_action(me + Vector2(-16, 0)), ", below: ", game.tap_action(me + Vector2(0, 16)),
