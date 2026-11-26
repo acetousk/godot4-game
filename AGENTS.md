@@ -16,7 +16,7 @@ A 16-year-old with no coding background. The kid makes every design choice. You 
 ## First run
 Do this when there is no `DESIGN.md`, before any skill. Skip it only if the parent says "skip the first run".
 
-1. Check the setup. Read only. Show a ✅/❌ list:
+1. Check the setup. Change no file (the import writes only the ignored `.godot/` folder, so run it in plan mode too). Show a ✅/❌ list:
    - `godot --version` matches `GODOT_VERSION` in `.github/workflows/release.yml`
    - `godot --headless --import` shows no errors
    - `export_presets.cfg` has the presets `Android`, `Windows Desktop`, `Linux`, `Web`
@@ -33,16 +33,16 @@ Do this when there is no `DESIGN.md`, before any skill. Skip it only if the pare
 5. Offer card G1 (design + scope). Then use the `game-plan` skill.
 
 ## Accounts
-The parent makes all accounts. The kid changes each password and keeps it in Bitwarden.
+The kid makes each account with their own email and keeps each password in their own Bitwarden.
+Claude is the one exception: Claude Code signs in with the parent's account (18+).
 Never ask for, show, or store a password, key, or code.
 
 | Account | Owner | Needed from |
 |---|---|---|
-| Claude Pro | Parent (18+). Never handed over. | Day 1 |
-| Bitwarden | Parent + kid, shared **Game** collection | Day 1 |
-| Kid email | Kid | Day 1 |
-| GitHub | Kid account in the parent's organization, public repo | Day 1 |
-| GD-Sync | Kid | Multiplayer milestone |
+| Claude Pro | Parent (18+) | Day 1 |
+| Email, Bitwarden (free) | Kid | Day 1 |
+| GitHub (public repo) | Kid | Day 1 |
+| GD-Sync | Kid | Day 1 (card G5) |
 | itch.io (optional) | Kid | Launch |
 
 On an account problem: say which account it is, and that the parent fixes it.
@@ -63,8 +63,9 @@ Make a missing file from the kid's answers. Then keep it up to date.
 - 3D: keep lights and shadows few, for web and phones.
 - Must work on Windows, Linux, Android, and Web: Input Map actions (keyboard + gamepad + touch), saves in `user://`, no sound before the first click or tap, no threads.
 - Multiplayer: GD-Sync only, code in `scripts/net.gd`. The host owns the game state. Do not guess GD-Sync APIs; ask the kid to paste the docs page.
+- GD-Sync setup: the kid installs it from the AssetLib and turns it on. Build and test in local mode first (`GDSync.start_local_multiplayer()`, no key). The keys are in `addons/GD-Sync/keys.cfg` (git-ignored); never read or commit it.
 - Art and sound, in this order: you make it (2D: SVG, or a script in `tools/` that writes PNG; 3D: primitive meshes with palette materials; sound: a script in `tools/` that writes WAV) → a CC0 stock asset that the kid downloads → the kid's own work. Use only the `DESIGN.md` palette.
-- Checks after GDScript edits: `godot --headless --import`, then `godot --headless --quit`.
+- Checks after GDScript edits: `godot --headless --import`, then `godot --headless --quit` (or `--quit-after <frames>`). Run them with no `timeout`, `cd` or `&&` around them, so they need no approval.
 
 ## Do not
 - Edit `.github/`, `.claude/`, `export_presets.cfg`, or secrets.

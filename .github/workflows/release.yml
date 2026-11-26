@@ -67,6 +67,9 @@ jobs:
         run: godot --headless --import || true
 
       - name: Export ${{ matrix.preset }}
+        env:   # GD-Sync puts these keys into the build (empty = local mode only)
+          GDSYNC_PUBLIC_KEY: ${{ secrets.GDSYNC_PUBLIC_KEY }}
+          GDSYNC_PRIVATE_KEY: ${{ secrets.GDSYNC_PRIVATE_KEY }}
         run: |
           mkdir -p build dist
           godot --headless --verbose --export-release "${{ matrix.preset }}" "build/${{ matrix.file }}"
