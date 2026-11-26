@@ -8,9 +8,9 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git tag --sort:*)",
-      "Bash(python tools/:*)",
-      "Bash(python3 tools/:*)",
-      "Bash(py tools/:*)"
+      "Bash(python tools/*)",
+      "Bash(python3 tools/*)",
+      "Bash(py tools/*)"
     ],
     "ask": [
       "Bash(git push:*)",
