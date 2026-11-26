@@ -34,6 +34,9 @@ var slots: Array[TextureRect] = []
 func _ready() -> void:
 	_make_slots()
 	_make_pad()
+	# Move the slots up a bit, to make room for the names under them.
+	slot_row.offset_top -= 20
+	slot_row.offset_bottom -= 20
 
 
 ## The touch pad: 4 arrows and Wait in the middle. Only on touch screens.
@@ -103,13 +106,18 @@ func show_slots(carried: Array[int], potions: Potions) -> void:
 	var potion_tex: Texture2D = load("res://art/potion.png")
 	for i in SLOT_COUNT:
 		var icon: TextureRect = slots[i].get_node("Icon")
+		var name_label: Label = slots[i].get_node("Name")
 		if i < carried.size():
+			var kind := carried[i]
 			icon.texture = potion_tex
-			icon.self_modulate = potions.tint(carried[i])
-			slots[i].tooltip_text = potions.display_name(carried[i])
+			icon.self_modulate = potions.tint(kind)
+			slots[i].tooltip_text = potions.display_name(kind)
+			# Under the slot: the real name once someone drank this kind, else the color + "?".
+			name_label.text = potions.NAMES[kind] if potions.known.has(kind) else potions.color_of[kind] + "?"
 		else:
 			icon.texture = null
 			slots[i].tooltip_text = ""
+			name_label.text = ""
 
 
 func _on_slot_input(event: InputEvent, index: int) -> void:
@@ -247,6 +255,19 @@ func _make_slots() -> void:
 		key.add_theme_constant_override("outline_size", 4)
 		key.add_theme_font_size_override("font_size", 14)
 		box.add_child(key)
+
+		# The potion's name, just under the box (phones can't hover for the tooltip).
+		var potion_name := Label.new()
+		potion_name.name = "Name"
+		potion_name.position = Vector2(-8, 64)
+		potion_name.size = Vector2(80, 20)
+		potion_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		potion_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		potion_name.add_theme_color_override("font_color", BONE)
+		potion_name.add_theme_color_override("font_outline_color", BLACK)
+		potion_name.add_theme_constant_override("outline_size", 4)
+		potion_name.add_theme_font_size_override("font_size", 13)
+		box.add_child(potion_name)
 
 		slot_row.add_child(box)
 		slots.append(box)

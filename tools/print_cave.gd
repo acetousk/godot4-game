@@ -446,6 +446,18 @@ func _ready() -> void:
 	print("Sound test: drink: ", s_drink, ", stairs: ", s_stairs, ", lose: ", Sfx.last)
 	game._on_play_again()
 
+	# Test: potion names under the slots.
+	game.player.potions.assign([Potions.Kind.HEALING, Potions.Kind.HEALING])
+	game._refresh_hud()
+	var name_before: String = game.hud.slots[0].get_node("Name").text
+	var empty_name: String = game.hud.slots[3].get_node("Name").text
+	game.drink(0)
+	game._refresh_hud()
+	var name_after: String = game.hud.slots[0].get_node("Name").text
+	print("Potion name test: before: ", name_before, " ends with ?: ", name_before.ends_with("?"),
+		", after drinking: ", name_after, ", empty slot: '", empty_name, "'")
+	game._on_play_again()
+
 	# Test: tapping tiles. Middle of the tile to the left = step left, on me = wait, far = nothing.
 	var me: Vector2 = Player.cell_to_pos(game.player.cell)
 	print("Tap test: left: ", game.tap_action(me + Vector2(-16, 0)), ", below: ", game.tap_action(me + Vector2(0, 16)),
