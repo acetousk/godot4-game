@@ -23,12 +23,24 @@ const RELIC_ART := preload("res://art/relic.png")
 const HERO_ART := preload("res://art/player.png")
 ## Each hero's color (Ember Cave palette): P1 normal, P2 green, P3 orange, P4 yellow.
 const HERO_TINTS := [Color.WHITE, Color("#7fae5a"), Color("#f2a33a"), Color("#ffd966")]
+## A fallen hero: rock gray, see-through.
+const GHOST_COLOR := Color("#6b5a4e", 0.6)
 
 ## How many heroes are in the run: 1 solo, 2-4 in co-op.
 @export var hero_count := 1
 
 ## All heroes in the run (1-4). heroes[0] is the Player node in the scene.
 var heroes: Array[Player] = []
+## The hero doing the action right now (moving, hitting, drinking).
+## `player` is MY hero (my keys and camera). In co-op they can be different.
+var actor: Player
+
+## Co-op host: log lines not sent yet.
+var _log_out: Array[String] = []
+## Co-op host: a send is already planned for this frame.
+var _send_queued := false
+## Co-op: counts the states. Friends skip a state older than the one they have.
+var _state_number := 0
 
 ## Dice for fights. (Only the host rolls these in co-op.)
 var rng := RandomNumberGenerator.new()
@@ -46,6 +58,8 @@ var relic: Sprite2D
 var visible_now := {}
 ## Every tile the player has ever seen on this floor.
 var seen_before := {}
+## True after a Sight potion on this floor (so the friends see the map too).
+var revealed := false
 ## How many turns have passed this run.
 var turn := 0
 ## The monsters on this floor.
@@ -65,9 +79,13 @@ func _ready() -> void:
 		hero_count = Net.players.size()
 	_make_heroes(hero_count)
 	hud.slot_pressed.connect(drink)
+	if Net.in_coop and Net.is_host():
+		hud.logged.connect(func(line: String) -> void: _log_out.append(line))
+	Net.player_left.connect(remove_hero)
 	if Net.in_coop:
 		_control(heroes[Net.my_index])  # My keys move my own hero.
 		start_run(Net.run_seed)  # The host's seed: the same cave for everyone.
+		_log_out.clear()  # Everyone already wrote their own first line.
 	else:
 		start_run(rng.randi())
 
@@ -95,6 +113,7 @@ func _new_floor() -> void:
 	gen = DungeonGen.new()
 	gen.generate(floor_rng, floor_num < Tune.floor_count)
 	seen_before.clear()
+	revealed = false
 	remembered.clear()
 	var spots := _start_spots(heroes.size())
 	for i in heroes.size():
@@ -131,11 +150,14 @@ func _make_heroes(count: int) -> void:
 		h.number = i + 1
 		h.self_modulate = HERO_TINTS[i]  # The hit flash uses modulate, so the color stays.
 		h.controlled = h == player
-		h.moved.connect(_on_player_moved)
-		h.waited.connect(_on_player_waited)
-		h.bumped.connect(_on_player_bumped)
+		h.asked.connect(ask)
+		# .bind(h) = the game also gets told WHICH hero did it.
+		h.moved.connect(_on_player_moved.bind(h))
+		h.waited.connect(_on_player_waited.bind(h))
+		h.bumped.connect(_on_player_bumped.bind(h))
 		h.has_monster = func(p: Vector2i) -> bool: return monster_at(p) != null
 		h.has_friend = func(p: Vector2i) -> bool: return hero_at(p) != null
+	actor = player
 
 
 ## The hero on this tile, or null.
@@ -183,7 +205,33 @@ func _control(hero: Player) -> void:
 	camera.reset_smoothing()
 
 
-func _on_player_moved(cell: Vector2i) -> void:
+## My hero wants to act (a key or a potion tap). Solo or host: do it now.
+## Co-op client: ask the host. The host checks it and does it.
+func ask(action: String) -> void:
+	var index := heroes.find(player)
+	if Net.in_coop and not Net.is_host():
+		Net.send_action(index, action)
+	else:
+		do_action(index, action)
+
+
+## Hero number `index` (0 = P1) does an action. Only the host (or solo) runs this.
+## Actions: "wait", "move_up/down/left/right", "drink_0" to "drink_3" (the slot).
+func do_action(index: int, action: String) -> void:
+	if index < 0 or index >= heroes.size():
+		return
+	var h := heroes[index]
+	if h.busy or not h.active or h.done:
+		return  # Sliding, dead, or already acted this round.
+	if action.begins_with("drink_"):
+		actor = h
+		_drink(int(action.trim_prefix("drink_")))
+	else:
+		h.do(action)
+
+
+func _on_player_moved(cell: Vector2i, hero: Player) -> void:
+	actor = hero
 	if gen.get_tile(cell) == DungeonGen.Tile.STAIRS:
 		_go_down()
 		return
@@ -198,18 +246,19 @@ func _on_player_moved(cell: Vector2i) -> void:
 
 
 ## Wait: skip a turn. If no monster is awake, you rest: every 10 waits heal 1 HP.
-func _on_player_waited() -> void:
+func _on_player_waited(hero: Player) -> void:
+	actor = hero
 	var any_awake := monsters.any(func(m): return m.awake)
 	if any_awake:
-		player.rest_count = 0
+		actor.rest_count = 0
 		hud.add_log("You wait. You can't rest with a monster awake.")
-	elif player.hp < player.max_hp:
-		player.rest_count += 1
-		if player.rest_count >= Tune.rest_turns_per_hp:
-			player.rest_count = 0
-			player.hp += 1
+	elif actor.hp < actor.max_hp:
+		actor.rest_count += 1
+		if actor.rest_count >= Tune.rest_turns_per_hp:
+			actor.rest_count = 0
+			actor.hp += 1
 			hud.add_log("You rest. +1 HP")
-		elif player.rest_count == 1:
+		elif actor.rest_count == 1:
 			hud.add_log("You rest...")
 	else:
 		hud.add_log("You wait.")
@@ -219,13 +268,14 @@ func _on_player_waited() -> void:
 # --- Fighting ---
 
 ## You walked into a monster: attack it. That uses your turn.
-func _on_player_bumped(target: Vector2i) -> void:
-	if not player.active:
+func _on_player_bumped(target: Vector2i, hero: Player) -> void:
+	actor = hero
+	if not actor.active:
 		return
 	var m := monster_at(target)
 	m.awake = true  # Hitting a sleeping monster wakes it up.
 	if _rolls_hit(m.info.dodge):
-		var dmg := rng.randi_range(Tune.player_damage_min, Tune.player_damage_max) + player.damage_bonus
+		var dmg := rng.randi_range(Tune.player_damage_min, Tune.player_damage_max) + actor.damage_bonus
 		m.hp -= dmg
 		_flash(m)
 		if m.hp <= 0:
@@ -272,14 +322,14 @@ func _rolls_hit(dodge: int) -> bool:
 
 ## Adds XP. Reaching 10, 25 or 45 XP = level up: +5 max HP, +1 damage, full heal.
 func _gain_xp(amount: int) -> void:
-	player.xp += amount
-	while player.level - 1 < Tune.level_xp.size() and player.xp >= Tune.level_xp[player.level - 1]:
-		player.level += 1
-		player.max_hp += Tune.level_hp_gain
-		player.damage_bonus += Tune.level_damage_gain
-		player.hp = player.max_hp
+	actor.xp += amount
+	while actor.level - 1 < Tune.level_xp.size() and actor.xp >= Tune.level_xp[actor.level - 1]:
+		actor.level += 1
+		actor.max_hp += Tune.level_hp_gain
+		actor.damage_bonus += Tune.level_damage_gain
+		actor.hp = actor.max_hp
 		hud.add_log("Level up! You are level %d. Max HP +%d, damage +%d." % [
-			player.level, Tune.level_hp_gain, Tune.level_damage_gain])
+			actor.level, Tune.level_hp_gain, Tune.level_damage_gain])
 
 
 ## Hit flash: turns the sprite blood red for a moment, then back to normal.
@@ -287,6 +337,10 @@ func _flash(sprite: CanvasItem) -> void:
 	sprite.modulate = Color("#c8443a")
 	var tween := sprite.create_tween()
 	tween.tween_property(sprite, "modulate", Color.WHITE, Tune.hit_flash_time)
+	# A hero who died during the flash goes back to ghost gray, not white.
+	tween.tween_callback(func() -> void:
+		if sprite is Player and sprite.ghost:
+			sprite.modulate = GHOST_COLOR)
 
 
 ## A killed monster flashes, then disappears.
@@ -303,7 +357,7 @@ func _kill(m: Monster) -> void:
 ## That hero is done for this round. When every living hero is done,
 ## the monsters take their turn and a new round starts.
 func _hero_done() -> void:
-	player.done = true
+	actor.done = true
 	if _waiting_for().is_empty():
 		_end_turn()
 	else:
@@ -385,11 +439,7 @@ func _wake_monsters() -> void:
 func _lose(hero: Player, killer: String) -> void:
 	if not hero.active:
 		return
-	hero.active = false
-	hero.modulate = Color("#6b5a4e", 0.6)  # A gray see-through ghost.
-	for child in hero.get_children():
-		if child is PointLight2D:
-			child.visible = false  # Its lantern goes out.
+	_make_ghost(hero)
 	if heroes.size() == 1:
 		hud.add_log("You were killed by %s." % killer)
 	else:
@@ -398,6 +448,34 @@ func _lose(hero: Player, killer: String) -> void:
 		hud.show_banner("You died")
 	else:
 		_watch_friend()
+
+
+## A player left the game: their hero vanishes. Everyone runs this on their own.
+## The round goes on without them (nobody waits for a hero that is gone).
+func remove_hero(index: int) -> void:
+	if index < 0 or index >= heroes.size() or not heroes[index].visible:
+		return
+	var h := heroes[index]
+	h.active = false
+	h.visible = false
+	if Net.is_host():
+		hud.add_log("P%d left the game." % h.number)  # The host sends this line to the others.
+	_watch_friend()
+	if Net.is_host() and heroes.any(func(x: Player) -> bool: return x.active):
+		if _waiting_for().is_empty():
+			_end_turn()  # Everyone else already acted: the monsters go now.
+	_update_view()
+	_refresh_hud()
+
+
+## A fallen hero: gray, see-through, lantern out. It can't act anymore.
+func _make_ghost(hero: Player) -> void:
+	hero.active = false
+	hero.ghost = true
+	hero.modulate = GHOST_COLOR
+	for child in hero.get_children():
+		if child is PointLight2D:
+			child.visible = false  # Its lantern goes out.
 
 
 ## If the camera is on a fallen hero, it moves to a living friend.
@@ -424,7 +502,7 @@ func _win() -> void:
 	if heroes.size() == 1:
 		hud.add_log("You grab the Ember Relic!")
 	else:
-		hud.add_log("P%d grabs the Ember Relic! You win together!" % player.number)
+		hud.add_log("P%d grabs the Ember Relic! You win together!" % actor.number)
 	hud.show_banner("You win!")
 
 
@@ -444,13 +522,15 @@ func _place_monsters(floor_rng: RandomNumberGenerator) -> void:
 
 	var start_room := _room_with(gen.start)
 	var taken := floor_items.duplicate()
-	for i in Tune.monsters_per_floor[floor_num - 1]:
+	var count: int = Tune.monsters_per_floor[floor_num - 1] + Tune.extra_monsters_per_player * (heroes.size() - 1)
+	for i in count:
 		var cell := gen.random_free_spot(floor_rng, taken)
 		while start_room.has_point(cell):
 			cell = gen.random_free_spot(floor_rng, taken)
 		taken[cell] = true
 		var m := Monster.new()
 		m.game = self
+		m.id = i
 		m.setup(types[floor_rng.randi_range(0, types.size() - 1)], cell)
 		m.visible = false  # Hidden until you see it.
 		monsters_node.add_child(m)
@@ -500,12 +580,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 
 
-## Drinks the potion in slot `index` (0 = slot 1). Now you know what that color does.
+## My hero wants to drink the potion in slot `index` (0 = slot 1). A key or a tap.
 func drink(index: int) -> void:
-	if player.busy or not player.active or player.done or index >= player.potions.size():
+	ask("drink_%d" % index)
+
+
+## The actor drinks the potion in slot `index`. Now everyone knows what that color does.
+func _drink(index: int) -> void:
+	if index < 0 or index >= actor.potions.size():
 		return
-	var kind: int = player.potions[index]
-	player.potions.remove_at(index)
+	var kind: int = actor.potions[index]
+	actor.potions.remove_at(index)
 	var was_known := potions.known.has(kind)
 	var color_name: String = potions.color_of[kind]
 	potions.learn(kind)
@@ -514,19 +599,19 @@ func drink(index: int) -> void:
 
 	match kind:
 		Potions.Kind.HEALING:
-			var before := player.hp
-			player.hp = mini(player.hp + Tune.heal_amount, player.max_hp)
-			hud.add_log("You feel better. +%d HP" % (player.hp - before))
+			var before := actor.hp
+			actor.hp = mini(actor.hp + Tune.heal_amount, actor.max_hp)
+			hud.add_log("You feel better. +%d HP" % (actor.hp - before))
 		Potions.Kind.SIGHT:
 			_reveal_floor()
 			hud.add_log("You see the whole floor in your mind.")
 		Potions.Kind.EMBERS:
-			player.hp = maxi(player.hp - Tune.embers_self_damage, 0)
-			_flash(player)
+			actor.hp = maxi(actor.hp - Tune.embers_self_damage, 0)
+			_flash(actor)
 			hud.add_log("Embers burst around you! -%d HP" % Tune.embers_self_damage)
 			_burn_neighbors()
-			if player.hp <= 0:
-				_lose(player, "their own embers" if heroes.size() > 1 else "your own embers")
+			if actor.hp <= 0:
+				_lose(actor,"their own embers" if heroes.size() > 1 else "your own embers")
 				# No return: the round goes on for the friends who are still alive.
 	_hero_done()  # Drinking takes your turn.
 
@@ -534,7 +619,7 @@ func drink(index: int) -> void:
 ## Embers potion: every monster on the 8 tiles around you takes 6 damage.
 func _burn_neighbors() -> void:
 	for m in monsters.duplicate():
-		var d: Vector2i = (m.cell - player.cell).abs()
+		var d: Vector2i = (m.cell - actor.cell).abs()
 		if maxi(d.x, d.y) != 1:
 			continue
 		m.awake = true
@@ -550,6 +635,7 @@ func _burn_neighbors() -> void:
 
 ## Sight potion: every tile of this floor counts as seen (shown dim).
 func _reveal_floor() -> void:
+	revealed = true
 	for y in gen.height:
 		for x in gen.width:
 			var p := Vector2i(x, y)
@@ -588,12 +674,12 @@ func _place_relic() -> void:
 
 ## Walked onto a potion: put it in a free slot, if there is one.
 func _pick_up(cell: Vector2i) -> void:
-	if player.potions.size() >= Hud.SLOT_COUNT:
+	if actor.potions.size() >= Hud.SLOT_COUNT:
 		hud.add_log("Your slots are full.")
 		return
 	var sprite: Sprite2D = floor_items[cell]
 	var kind: int = sprite.get_meta("kind")
-	player.potions.append(kind)
+	actor.potions.append(kind)
 	floor_items.erase(cell)
 	sprite.queue_free()
 	hud.add_log("You pick up a %s." % potions.display_name(kind))
@@ -606,7 +692,7 @@ func _go_down() -> void:
 	floor_num += 1
 	_new_floor()
 	if heroes.size() > 1:
-		hud.add_log("P%d found the stairs. The team goes down together." % player.number)
+		hud.add_log("P%d found the stairs. The team goes down together." % actor.number)
 	if floor_num == Tune.floor_count:
 		hud.add_log("You go down to floor %d. The relic is near..." % floor_num)
 	else:
@@ -625,7 +711,130 @@ func _refresh_hud() -> void:
 		waiting = "Waiting for " + ", ".join(names)
 	hud.show_stats(player, floor_num, waiting)
 	hud.show_slots(player.potions, potions)
+	_queue_send()
 
+
+# --- Co-op: the host sends the state, the friends draw it ---
+
+## Host: something changed. Send the state once, at the end of this frame
+## (one action can change many things, but it's still 1 message).
+func _queue_send() -> void:
+	if Net.in_coop and Net.is_host() and not _send_queued:
+		_send_queued = true
+		_send_state.call_deferred()
+
+
+func _send_state() -> void:
+	_send_queued = false
+	_state_number += 1
+	Net.send_state(make_state())
+	_log_out.clear()
+
+
+## The small state: a number for each thing that can change. No pictures, no map
+## (everyone already builds the same map from the seed).
+## Hero = [x, y, hp, max hp, level, xp, damage bonus, done, potions, ghost].
+func make_state() -> Dictionary:
+	var hero_list := []
+	for h in heroes:
+		hero_list.append([h.cell.x, h.cell.y, h.hp, h.max_hp, h.level, h.xp, h.damage_bonus,
+			h.done, Array(h.potions), h.ghost])
+	## Monster = [id, x, y, hp, awake]. A dead monster is just not in the list.
+	var monster_list := []
+	for m in monsters:
+		monster_list.append([m.id, m.cell.x, m.cell.y, m.hp, m.awake])
+	## Potions still lying on the floor = [x, y] (picked up = not in the list).
+	var item_list := []
+	for cell in floor_items:
+		item_list.append([cell.x, cell.y])
+	return {
+		"n": _state_number, "floor": floor_num, "turn": turn,
+		"heroes": hero_list, "monsters": monster_list, "items": item_list,
+		"relic": relic != null,  # false = somebody grabbed it.
+		"revealed": revealed,  # Somebody drank Sight on this floor.
+		"known": potions.known.keys(),  # Potion kinds the team has learned.
+		"banner": hud.get_node("Banner").text if hud.has_node("Banner") else "",
+		"log": _log_out.duplicate(),
+	}
+
+
+## Friends only: draw what the host sent. No game rules run here.
+func apply_state(state: Dictionary) -> void:
+	if state["n"] <= _state_number:
+		return  # An old message that came late. We already have a newer one.
+	_state_number = state["n"]
+	if state["floor"] != floor_num:
+		# Someone took the stairs. We build the same new floor from the seed.
+		floor_num = state["floor"]
+		_new_floor()
+	turn = state["turn"]
+	var hero_list: Array = state["heroes"]
+	for i in mini(heroes.size(), hero_list.size()):
+		var h := heroes[i]
+		var d: Array = hero_list[i]
+		var c := Vector2i(d[0], d[1])
+		if c != h.cell:
+			h.slide_to(c)
+		if d[2] < h.hp:
+			_flash(h)  # Got hit.
+		h.hp = d[2]
+		h.max_hp = d[3]
+		h.level = d[4]
+		h.xp = d[5]
+		h.damage_bonus = d[6]
+		h.done = d[7]
+		h.potions.assign(d[8])
+		if d[9] and not h.ghost:
+			_make_ghost(h)  # This hero just died.
+	_watch_friend()  # If my hero died, the camera goes to a friend.
+	_apply_monsters(state["monsters"])
+
+	# Potions: remove the ones somebody picked up.
+	var still_there := {}
+	for d in state["items"]:
+		still_there[Vector2i(d[0], d[1])] = true
+	for cell in floor_items.keys():
+		if not still_there.has(cell):
+			floor_items[cell].queue_free()
+			floor_items.erase(cell)
+	for kind in state["known"]:
+		potions.learn(kind)
+	if state["revealed"] and not revealed:
+		_reveal_floor()
+	if relic and not state["relic"]:
+		relic.queue_free()
+		relic = null
+
+	for line in state["log"]:
+		hud.add_log(line)
+	# The run is over (win or everyone died): nobody can act, show the banner.
+	if state["banner"] != "" and not hud.has_node("Banner"):
+		for h in heroes:
+			h.active = false
+		hud.show_banner(state["banner"])
+	_update_view()
+	_refresh_hud()
+
+
+## Friends only: monsters slide where the host says, flash when hit,
+## and disappear when the host's list doesn't have them anymore.
+func _apply_monsters(monster_list: Array) -> void:
+	var by_id := {}
+	for d in monster_list:
+		by_id[d[0]] = d
+	for m in monsters.duplicate():
+		if not by_id.has(m.id):
+			_flash(m)
+			_kill(m)
+			continue
+		var d: Array = by_id[m.id]
+		var c := Vector2i(d[1], d[2])
+		if c != m.cell:
+			m.slide_to(c)
+		if d[3] < m.hp:
+			_flash(m)
+		m.hp = d[3]
+		m.awake = d[4]
 
 ## Works out what the heroes can see, then redraws.
 ## Shared vision: you see everything any living hero's lantern lights.

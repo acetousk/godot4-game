@@ -8,6 +8,8 @@ signal moved(cell: Vector2i)
 signal waited
 ## Sent when you walk into a monster: that's an attack.
 signal bumped(target: Vector2i)
+## Sent when you press a key: "I want to do this" (like "move_left" or "wait").
+signal asked(action: String)
 
 const TILE := 16
 const DIRS := {
@@ -25,6 +27,8 @@ var gen: DungeonGen
 var busy := false
 ## False when the run is over (win or lose): no more moving.
 var active := true
+## True after this hero died (a ghost that watches). Not true after a win.
+var ghost := false
 ## True for the hero your keys move. The other heroes ignore your keys.
 var controlled := true
 ## Hero number: 1 to 4 (P1-P4).
@@ -59,19 +63,25 @@ static func cell_to_pos(c: Vector2i) -> Vector2:
 	return Vector2(c * TILE) + Vector2(TILE, TILE) / 2.0
 
 
+## Your key press does not move you right away. It asks the game first
+## (in co-op the game asks the host). The host then calls do().
 func _unhandled_input(event: InputEvent) -> void:
 	if busy or not active or not controlled or done:
 		return
-	if event.is_action_pressed("wait", true):
-		get_viewport().set_input_as_handled()
-		waited.emit()
-		return
-	for action in DIRS:
+	for action in ["wait"] + DIRS.keys():
 		# true = holding the key keeps walking
 		if event.is_action_pressed(action, true):
 			get_viewport().set_input_as_handled()
-			try_move(DIRS[action])
+			asked.emit(action)
 			return
+
+
+## Does an action: "wait", or a move like "move_left".
+func do(action: String) -> void:
+	if action == "wait":
+		waited.emit()
+	elif DIRS.has(action):
+		try_move(DIRS[action])
 
 
 func try_move(dir: Vector2i) -> void:
@@ -83,13 +93,14 @@ func try_move(dir: Vector2i) -> void:
 		return
 	if has_friend.call(target):
 		return  # A friend is standing there.
+	slide_to(target).finished.connect(func() -> void: moved.emit(cell))
+
+
+## Slides to a tile. (Co-op clients only use this: the host already decided the move.)
+func slide_to(target: Vector2i) -> Tween:
 	cell = target
 	busy = true
 	var tween := create_tween()
 	tween.tween_property(self, "position", cell_to_pos(cell), Tune.move_time)
-	tween.finished.connect(_on_slide_done)
-
-
-func _on_slide_done() -> void:
-	busy = false
-	moved.emit(cell)
+	tween.finished.connect(func() -> void: busy = false)
+	return tween

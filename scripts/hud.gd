@@ -4,6 +4,8 @@ extends CanvasLayer
 
 ## Sent when you click or tap a slot. 0 = slot 1.
 signal slot_pressed(index: int)
+## Sent for every new log message (the co-op host sends them to the friends).
+signal logged(message: String)
 
 const SLOT_COUNT := 4
 const BONE := Color("#e8dcc4")
@@ -81,6 +83,7 @@ func add_log(message: String) -> void:
 	if log_lines.size() > 3:
 		log_lines.pop_front()
 	log_label.text = "\n".join(log_lines)
+	logged.emit(message)
 
 
 ## Builds the 4 slot boxes at the bottom of the screen.

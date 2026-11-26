@@ -63,6 +63,86 @@ func _ready() -> void:
 	Net.in_coop = false
 	Net.players.clear()
 	Net.my_index = 0
+
+	# Test: the host does an action for a friend's hero (here P1, while I am P2).
+	var coop_turn: int = coop.turn
+	coop.do_action(0, "wait")
+	var p1_done: bool = coop.heroes[0].done
+	coop.do_action(0, "wait")  # Already acted: must be ignored.
+	coop.do_action(7, "wait")  # No hero 8: must be ignored, no crash.
+	print("Host action test: P1 acted: ", p1_done, ", P2 not yet: ", not coop.heroes[1].done,
+		", double move ignored: ", coop.turn == coop_turn)
+
+	# Test: P2 leaves while P1 already acted: P2 vanishes and the monsters go right away.
+	var leave_game = load("res://scenes/game.tscn").instantiate()
+	leave_game.hero_count = 2
+	add_child(leave_game)
+	leave_game.start_run(1234)
+	leave_game.do_action(0, "wait")
+	var turn_was: int = leave_game.turn
+	leave_game.remove_hero(1)
+	print("Leave test: P2 hidden: ", not leave_game.heroes[1].visible, ", turn went on: ", leave_game.turn == turn_was + 1,
+		", P1 free: ", not leave_game.heroes[0].done, ", log: ", leave_game.hud.log_lines.back())
+	leave_game.queue_free()
+
+	# Test: the host's state, drawn by a friend's game.
+	var friend = load("res://scenes/game.tscn").instantiate()
+	friend.hero_count = 2
+	add_child(friend)
+	friend.start_run(1234)
+	coop.heroes[1].hp = 7
+	coop.heroes[1].potions.assign([Potions.Kind.HEALING])
+	coop.hud.add_log("Test line from the host.")
+	var dead_one: Monster = coop.monsters[0]
+	coop._kill(dead_one)  # Host: monster 0 dies.
+	var mover2: Monster = coop.monsters[0]  # Host: the next one moves 1 tile and gets hit.
+	var new_cell: Vector2i = mover2.cell
+	for dir in Monster.DIRS:
+		if coop.is_free(mover2.cell + dir):
+			new_cell = mover2.cell + dir
+			break
+	mover2.cell = new_cell
+	mover2.hp -= 1
+	var state: Dictionary = coop.make_state()
+	state["n"] = 5
+	state["log"] = ["Test line from the host."]
+	friend.apply_state(state)
+	var old_state := state.duplicate(true)
+	old_state["n"] = 4
+	old_state["turn"] = 999
+	friend.apply_state(old_state)  # Came late: must be skipped.
+	print("State test: P1 done: ", friend.heroes[0].done, ", P2 HP 7: ", friend.heroes[1].hp == 7,
+		", P2 potion: ", friend.heroes[1].potions.size() == 1, ", log: ", friend.hud.log_lines.back() == "Test line from the host.",
+		", old state skipped: ", friend.turn != 999, ", state size: ", var_to_bytes(state).size(), " bytes")
+	var f_mover: Monster = friend.monsters.filter(func(m): return m.id == mover2.id)[0]
+	print("Monster state test: dead one gone: ", friend.monsters.all(func(m): return m.id != dead_one.id),
+		", count same as host: ", friend.monsters.size() == coop.monsters.size(),
+		", mover moved: ", f_mover.cell == new_cell, ", mover HP: ", f_mover.hp == mover2.hp)
+
+	# Test: stairs, a potion picked up, a hero dying, learned potions, then the end banner.
+	coop._go_down()
+	var taken_cell: Vector2i = coop.floor_items.keys()[0]
+	coop.actor = coop.heroes[0]
+	coop._pick_up(taken_cell)
+	var learned: int = coop.heroes[0].potions[0]
+	coop.potions.learn(learned)
+	coop._lose(coop.heroes[1], "a test")
+	coop._reveal_floor()  # Host drank Sight.
+	state = coop.make_state()
+	state["n"] = 6
+	friend.apply_state(state)
+	print("Sight sync test: friend sees the map: ", friend.seen_before.size() == coop.seen_before.size())
+	print("Sync test: friend on floor 2: ", friend.floor_num == 2, ", same cave: ", _floor_print(friend) == _floor_print(coop),
+		", potion gone: ", not friend.floor_items.has(taken_cell), ", same potion count: ", friend.floor_items.size() == coop.floor_items.size(),
+		", potion learned: ", friend.potions.known.has(learned), ", P2 ghost: ", friend.heroes[1].ghost and not friend.heroes[1].active,
+		", no banner yet: ", not friend.hud.has_node("Banner"))
+	coop._lose(coop.heroes[0], "a test")
+	state = coop.make_state()
+	state["n"] = 7
+	friend.apply_state(state)
+	print("End sync test: banner: ", friend.hud.has_node("Banner") and friend.hud.get_node("Banner").text == "You died",
+		", nobody can act: ", friend.heroes.all(func(h): return not h.active))
+	friend.queue_free()
 	coop.queue_free()
 
 	# --- Team tests: a game with 2 heroes ---
@@ -93,12 +173,12 @@ func _ready() -> void:
 	mover.awake = true
 	var mover_start: Vector2i = mover.cell
 	var t0: int = team.turn
-	team._on_player_waited()
+	team._on_player_waited(team.player)
 	var moved_after_p1: bool = mover.cell != mover_start
 	var p1_blocked: bool = team.heroes[0].done
 	var wait_text: String = team.hud.stats.text
 	team._switch_hero()
-	team._on_player_waited()
+	team._on_player_waited(team.player)
 	team._switch_hero()
 	print("Team turn test: after P1 monster moved: ", moved_after_p1, ", P1 must wait: ", p1_blocked,
 		", HUD says Waiting for P2: ", wait_text.ends_with("Waiting for P2"), ", after P2 monster moved: ", mover.cell != mover_start,
@@ -123,6 +203,7 @@ func _ready() -> void:
 	team._update_view()
 	var both_seen: bool = team.visible_now.has(p1.cell) and team.visible_now.has(p2.cell)
 	var both_zero: bool = team.path_dist.get(p1.cell) == 0 and team.path_dist.get(p2.cell) == 0
+	p2.hp = 3  # Low HP, so 20 slime hits always take P2 down.
 	for t in 20:
 		team.monster_attacks(near_p2)
 	print("Nearest hero test: slime near P2 woke up: ", near_p2.awake, ", both heroes are targets: ", both_zero,
@@ -145,7 +226,7 @@ func _ready() -> void:
 
 	# Test: stairs take the whole team down, and the round stays fair.
 	p1.done = true
-	team._on_player_moved(team.gen.goal)  # Floor 1 has stairs at the goal.
+	team._on_player_moved(team.gen.goal, team.player)  # Floor 1 has stairs at the goal.
 	print("Team stairs test: floor ", team.floor_num, ", both in the start room: ",
 		team._room_with(team.gen.start).has_point(p1.cell) and team._room_with(team.gen.start).has_point(p2.cell),
 		", P1 may act: ", not p1.done, ", log: ", team.hud.log_lines.back())
@@ -161,7 +242,7 @@ func _ready() -> void:
 	team2._go_down()
 	team2._go_down()
 	team2._lose(team2.heroes[1], "a test")
-	team2._on_player_moved(team2.gen.goal)
+	team2._on_player_moved(team2.gen.goal, team2.player)
 	print("Team win test: floor ", team2.floor_num, ", banner: ", team2.hud.has_node("Banner"),
 		", banner text: ", team2.hud.get_node("Banner").text if team2.hud.has_node("Banner") else "-",
 		", nobody can move: ", not team2.heroes[0].active and not team2.heroes[1].active,
@@ -232,7 +313,7 @@ func _ready() -> void:
 	w.setup("warden", game0.player.cell + Vector2i.RIGHT)
 	var rounds := 0
 	while w.hp > 0 and game0.player.hp > 0 and rounds < 50:
-		game0._on_player_bumped(w.cell)
+		game0._on_player_bumped(w.cell, game0.player)
 		rounds += 1
 	print("Fight test: after ", rounds, " rounds: warden HP ", w.hp, ", your HP ", game0.player.hp,
 		", warden gone: ", not game0.monsters.has(w))
@@ -248,7 +329,7 @@ func _ready() -> void:
 	killer.setup("warden", game0.player.cell + Vector2i.LEFT)
 	for t in 20:
 		game0.monster_attacks(killer)
-	game0._on_player_bumped(killer.cell)  # Dead heroes can't attack.
+	game0._on_player_bumped(killer.cell, game0.player)  # Dead heroes can't attack.
 	print("Lose test: HP ", game0.player.hp, ", can move: ", game0.player.active,
 		", banner: ", game0.hud.has_node("Banner"), ", log: ", game0.hud.log_lines.back())
 	game0.player.active = true  # Bring the hero back for the next tests.
@@ -258,7 +339,7 @@ func _ready() -> void:
 		game0._kill(m)
 	game0.player.hp = 10
 	for t in 30:
-		game0._on_player_waited()
+		game0._on_player_waited(game0.player)
 	print("Rest test: HP 10 -> ", game0.player.hp, " after 30 waits")
 
 	# Test: embers hits monsters next to you (diagonal too), not 2 tiles away.
@@ -288,14 +369,14 @@ func _ready() -> void:
 	game.hero_count = 1  # These tests play solo.
 	add_child(game)
 	for i in Tune.floor_count - 1:
-		game._on_player_moved(game.gen.goal)
+		game._on_player_moved(game.gen.goal, game.player)
 	var has_stairs: bool = game.gen.to_text().contains(">")
 	print("Stairs test: on floor ", game.floor_num, ", stairs here: ", has_stairs)
 
 	# Test: step on every potion on this floor and check they land in the slots.
 	var on_floor: int = game.floor_items.size()
 	for cell in game.floor_items.keys():
-		game._on_player_moved(cell)
+		game._on_player_moved(cell, game.player)
 	for kind in Potions.Kind.values():
 		print("  ", Potions.NAMES[kind], " is ", game.potions.color_of[kind], " this run")
 	print("Potion test: ", on_floor, " on the floor, now carrying ", game.player.potions.size(),
@@ -317,11 +398,11 @@ func _ready() -> void:
 
 	# Test: waiting passes a turn.
 	var turn_before: int = game.turn
-	game._on_player_waited()
+	game._on_player_waited(game.player)
 	print("Turn test: turn ", turn_before, " -> ", game.turn)
 
 	# Test: step on the relic and win.
-	game._on_player_moved(game.gen.goal)
+	game._on_player_moved(game.gen.goal, game.player)
 	print("Win test: player can still move: ", game.player.active,
 		", banner: ", game.hud.has_node("Banner"), ", log: ", game.hud.log_lines.back())
 	get_tree().quit()

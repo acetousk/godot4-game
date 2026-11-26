@@ -34,6 +34,7 @@ func _ready() -> void:
 	Net.room_joined.connect(func(_code: String) -> void: _show_room())
 	Net.room_failed.connect(func(text: String) -> void: status_label.text = text)
 	Net.players_changed.connect(_refresh_players)
+	Net.room_closed.connect(_show_main)  # The status line says why.
 	_show_main()
 
 

@@ -10,6 +10,10 @@ signal players_changed
 signal room_joined(code: String)
 ## Making or joining a room did not work.
 signal room_failed(text: String)
+## During a run: the player with hero number `index` (0 = P1) left.
+signal player_left(index: int)
+## The room is gone (the host left, or the connection broke).
+signal room_closed
 
 ## true = local network only: no key needed, no data used. Good for testing.
 ## false = online through the GD-Sync servers (needs the key in Project > Tools > GD-Sync).
@@ -35,6 +39,8 @@ var my_index := 0
 var _after_connect: Callable
 ## How many codes we tried (if a code is taken, we pick another one).
 var _tries := 0
+## The host of the room we are in (0 = not known yet).
+var _host_id := 0
 
 
 func _ready() -> void:
@@ -47,8 +53,39 @@ func _ready() -> void:
 	GDSync.lobby_creation_failed.connect(_on_lobby_creation_failed)
 	GDSync.lobby_joined.connect(_on_lobby_joined)
 	GDSync.lobby_join_failed.connect(_on_lobby_join_failed)
+	GDSync.host_changed.connect(_on_host_changed)
 	# Other players may call start_game on us, but only if they are the host.
 	GDSync.expose_func(start_game, ENUMS.EXPOSE_PERMISSION.HOST)
+	# Anyone may ASK the host for a move. The host checks it before doing it.
+	GDSync.expose_func(request_action, ENUMS.EXPOSE_PERMISSION.ANYONE)
+	# Only the host may send the game state.
+	GDSync.expose_func(receive_state, ENUMS.EXPOSE_PERMISSION.HOST)
+
+
+## Host: sends the new state to all the friends (not to itself).
+func send_state(state: Dictionary) -> void:
+	GDSync.call_func(receive_state, state)
+
+
+## Runs on the friends: hands the host's state to the game to draw.
+func receive_state(state: Dictionary) -> void:
+	var game := get_tree().current_scene
+	if game and game.has_method("apply_state"):
+		game.apply_state(state)
+
+
+## Client: "my hero wants to do this". Sent to the host only.
+func send_action(hero_index: int, action: String) -> void:
+	GDSync.call_func_on(GDSync.get_host(), request_action, hero_index, action)
+
+
+## Runs on the host when a client asks for a move. The game checks if it is allowed.
+func request_action(hero_index: int, action: String) -> void:
+	if not is_host():
+		return
+	var game := get_tree().current_scene
+	if game and game.has_method("do_action"):
+		game.do_action(hero_index, action)
 
 
 ## Host only: locks the room, makes the seed, and starts the game on every client
@@ -100,6 +137,7 @@ func leave_room() -> void:
 		GDSync.lobby_leave()
 	room_code = ""
 	players.clear()
+	_host_id = 0
 	_set_status("Connected" if online else "Offline")
 
 
@@ -123,6 +161,7 @@ func go_offline() -> void:
 	in_coop = false
 	room_code = ""
 	players.clear()
+	_host_id = 0
 	_set_status("Offline")
 
 
@@ -165,6 +204,8 @@ func _on_lobby_creation_failed(code: String, error: int) -> void:
 
 func _on_lobby_joined(code: String) -> void:
 	room_code = code
+	if GDSync.get_host() > 0:
+		_host_id = GDSync.get_host()
 	_set_status("In room %s" % code)
 	room_joined.emit(code)
 
@@ -196,19 +237,55 @@ func _on_disconnected() -> void:
 	online = false
 	players.clear()
 	room_code = ""
+	_host_id = 0
 	_set_status("Lost the connection.")
 	players_changed.emit()
+	_back_to_menu()
 
 
 func _on_client_joined(client_id: int) -> void:
+	if in_coop:
+		return  # The room is closed after the start.
 	if not players.has(client_id):
 		players.append(client_id)
 		players_changed.emit()
 
 
 func _on_client_left(client_id: int) -> void:
-	players.erase(client_id)
-	players_changed.emit()
+	var index := players.find(client_id)
+	if index == -1:
+		return
+	if in_coop:
+		# In a run, the list keeps its order (P2 stays P2). 0 = this player left.
+		players[index] = 0
+		player_left.emit(index)
+	else:
+		players.erase(client_id)
+		players_changed.emit()
+
+
+## The host left. GD-Sync would pick a new host, but our host owns the whole cave,
+## so the run ends for everyone (the kid's rule: no host switching in v1).
+## (GD-Sync also sends this when a room first gets its host. That one is fine.)
+func _on_host_changed(_i_am_host: bool, new_host_id: int) -> void:
+	if _host_id <= 0 or new_host_id == _host_id:
+		_host_id = new_host_id  # The first host of this room.
+		return
+	if room_code == "" and not in_coop:
+		return
+	leave_room()
+	_set_status("Host left.")
+	_back_to_menu()
+
+
+## Ends a co-op run or room and shows the menu (it shows the status text).
+func _back_to_menu() -> void:
+	var was_in_game := in_coop
+	in_coop = false
+	if was_in_game:
+		get_tree().change_scene_to_file("res://scenes/menu.tscn")
+	else:
+		room_closed.emit()  # Still in the menu: it goes back to the first page.
 
 
 func _set_status(text: String) -> void:

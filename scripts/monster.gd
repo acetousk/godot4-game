@@ -13,6 +13,9 @@ var hp: int
 var cell: Vector2i
 ## Monsters sleep until you come close.
 var awake := false
+## Its number on this floor (0, 1, 2...). Same on every player's game, so the
+## host can say "monster 3 moved" and everyone knows which one.
+var id := 0
 ## The game, so the monster can ask where it may walk.
 var game: Node
 
@@ -44,10 +47,11 @@ func take_turn() -> void:
 			best = next
 			best_dist = d
 	if best != cell:
-		_slide_to(best)
+		slide_to(best)
 
 
-func _slide_to(target: Vector2i) -> void:
+## (Co-op friends also call this, when the host says the monster moved.)
+func slide_to(target: Vector2i) -> void:
 	cell = target
 	var tween := create_tween()
 	tween.tween_property(self, "position", Player.cell_to_pos(cell), Tune.move_time)

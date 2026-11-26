@@ -27,6 +27,8 @@ extends Node
 # --- Monsters ---
 ## How many monsters on floor 1, 2 and 3.
 @export var monsters_per_floor: Array[int] = [4, 6, 7]
+## Co-op: extra monsters on every floor for each extra player (2 players = +2, 4 players = +6).
+@export var extra_monsters_per_player := 2
 ## Every monster: name, HP, damage (min-max), dodge %, XP it gives,
 ## how close you must be to wake it (tiles), and which floors it lives on.
 @export var monster_types: Dictionary = {
