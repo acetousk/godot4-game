@@ -1,8 +1,9 @@
 extends Fighter
 ## A bot: a capsule with a small brain.
-## ROAM = walk to random spots. FIGHT = sees someone, strafes and shoots.
+## STORM = outside the circle, run to the middle (this comes first).
+## ROAM = walk to random spots in the circle. FIGHT = sees someone, strafes and shoots.
 
-enum Mode { ROAM, FIGHT }
+enum Mode { ROAM, FIGHT, STORM }
 
 const EYE := Vector3(0, 1.5, 0)
 
@@ -27,10 +28,16 @@ func _ready() -> void:
 	_pick_roam_point()
 
 
-## Choose a random spot on the island and ask the map for a path there.
+## Choose a random spot inside the safe circle and ask the map for a path there.
 func _pick_roam_point() -> void:
-	var half := 70.0
-	agent.target_position = Vector3(randf_range(-half, half), 0.2, randf_range(-half, half))
+	var middle := Vector2.ZERO
+	var size := 70.0
+	var storm := get_tree().get_first_node_in_group("storm")
+	if storm:
+		middle = storm.center
+		size = storm.radius * 0.8
+	var spot := middle + Vector2.from_angle(randf() * TAU) * sqrt(randf()) * size
+	agent.target_position = Vector3(clampf(spot.x, -70, 70), 0.2, clampf(spot.y, -70, 70))
 
 
 ## True if nothing solid is between my eyes and theirs.
@@ -52,6 +59,11 @@ func _look_for_target() -> void:
 			best = dist
 			target = other
 	mode = Mode.FIGHT if target else Mode.ROAM
+	# The storm comes first: if I am outside, run to the middle.
+	var storm := get_tree().get_first_node_in_group("storm")
+	if storm and not storm.is_safe(global_position):
+		mode = Mode.STORM
+		agent.target_position = Vector3(storm.center.x, 0.2, storm.center.y)
 
 
 func _physics_process(delta: float) -> void:
@@ -64,17 +76,19 @@ func _physics_process(delta: float) -> void:
 		look_timer = 0.2
 		_look_for_target()
 
-	if mode == Mode.FIGHT and is_instance_valid(target):
+	if mode == Mode.STORM:
+		_follow_path()
+	elif mode == Mode.FIGHT and is_instance_valid(target):
 		_fight(delta)
 	else:
-		_roam()
+		if agent.is_navigation_finished():
+			_pick_roam_point()
+		_follow_path()
 	move_and_slide()
 
 
-func _roam() -> void:
-	if agent.is_navigation_finished():
-		_pick_roam_point()
-	# Walk toward the next corner of the path.
+## Walk toward the next corner of the path.
+func _follow_path() -> void:
 	var direction := agent.get_next_path_position() - global_position
 	direction.y = 0.0
 	if direction.length() > 0.1:

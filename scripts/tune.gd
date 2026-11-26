@@ -35,6 +35,13 @@ extends Node
 @export var bot_accuracy_far: float = 0.2 ## Chance a bot bullet hits at the edge of sight (0.2 = 20%)
 @export var bot_accuracy_near: float = 0.6 ## Chance a bot bullet hits up close (0.6 = 60%)
 
+@export_group("Storm")
+@export var storm_start_radius: float = 80.0 ## Size of the safe circle at the start, in meters
+@export var storm_wait: float = 35.0 ## Seconds before the storm starts to shrink
+@export var storm_shrink_time: float = 90.0 ## Seconds the storm takes to shrink all the way to 0
+@export var storm_dps_start: float = 2.0 ## HP per second lost outside the circle at the start
+@export var storm_dps_end: float = 10.0 ## HP per second lost outside the circle when it is fully closed
+
 @export_group("Drop")
 @export var drop_height: float = 80.0 ## How high you start in the sky, in meters
 @export var glide_fall: float = 8.0 ## How fast you sink while gliding, in meters per second

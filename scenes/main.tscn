@@ -1,9 +1,26 @@
-[gd_scene load_steps=33 format=3]
+[gd_scene load_steps=36 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/chest.tscn" id="2_chest"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="3_hud"]
 [ext_resource type="Script" path="res://scripts/game.gd" id="4_game"]
+[ext_resource type="Script" path="res://scripts/storm.gd" id="5_storm"]
+
+[sub_resource type="StandardMaterial3D" id="storm_mat"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.482, 0.173, 0.749, 0.35)
+
+[sub_resource type="CylinderMesh" id="storm_mesh"]
+material = SubResource("storm_mat")
+top_radius = 1.0
+bottom_radius = 1.0
+height = 200.0
+radial_segments = 64
+rings = 1
+cap_top = false
+cap_bottom = false
 
 [sub_resource type="NavigationMesh" id="navmesh"]
 geometry_parsed_geometry_type = 1
@@ -518,5 +535,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.2, -30)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0)
+
+[node name="Storm" type="Node3D" parent="."]
+script = ExtResource("5_storm")
+
+[node name="Wall" type="MeshInstance3D" parent="Storm"]
+mesh = SubResource("storm_mesh")
+cast_shadow = 0
 
 [node name="HUD" parent="." instance=ExtResource("3_hud")]

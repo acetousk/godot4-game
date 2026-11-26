@@ -12,7 +12,7 @@ G2 core loop: island, player, movement, camera, glide start.
 | ✓ | G3a Loot + rifle | G2 | `scenes/main.tscn`, `scenes/chest.tscn`, `scripts/chest.gd`, `scripts/player.gd`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd`, `project.godot`, `DESIGN.md` | You open a chest, shoot a target, reload, and heal |
 | ✓ | G3b Bots + win | G3a | `scenes/bot.tscn`, `scripts/bot.gd`, `scripts/health.gd`, `scripts/game.gd`, `scenes/main.tscn`, `scenes/hud.tscn`, `scripts/hud.gd`, `scripts/tune.gd` | 3 bots roam and fight; you win when last one left, lose at 0 HP |
 |  | Build | G3 | pickaxe, material, Wall | — |
-|  | G4 Pressure | G3 | storm | — |
+| ✓ | G4 Storm | G3 | `scripts/storm.gd`, `scenes/main.tscn`, `scripts/tune.gd`, `scripts/bot.gd`, `scripts/hud.gd`, `scenes/hud.tscn`, `PLAN.md` | Storm waits, shrinks to 0, hurts anyone outside (more as it shrinks), bots run inside, HUD shows the timer |
 |  | G5 Online | G4 | `scripts/net.gd` | — |
 |  | G6 Flow + sound + touch | G5 | screens, `tools/make_sfx.py`, touch | — |
 |  | G7 Ship | G6 | title, icon, `CHANGELOG.md`, `v0.1.0` | — |
@@ -47,6 +47,14 @@ G2 core loop: island, player, movement, camera, glide start.
 10. HUD: players left
 11. Win / lose message + restart
 12. Tune pass (bot aim)
+
+### G4 steps
+1. Purple see-through storm wall, radius 80, center near middle
+2. Timer: wait 45 s, shrink to 0 over 90 s
+3. Damage once per second outside: 2 → 10 HP as it shrinks
+4. HUD: storm timer + "IN THE STORM!"
+5. Bots outside walk inside first
+6. Tune pass
 
 ## Bugs
 (none yet)

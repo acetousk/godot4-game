@@ -37,7 +37,7 @@
 - **Gun:** Burst rifle (3×12 dmg, burst every 0.6 s, mag 15, 60 m, reload 1.8 s), unlimited ammo with reloads
 - **Chests:** 6 chests (hold E 0.5 s): Burst rifle + 1 heal kit (+50 HP, 3 s, max 2)
 - **Health:** 100 HP, no shield
-- **Storm:** 1 phase, shrinks to 0, does damage outside
+- **Storm:** 1 phase. Waits 35 s, shrinks from 80 m to 0 over 90 s. Outside hurts 2 → 10 HP/s as it shrinks
 - **Bots:** 3 bots. Roam inside the circle (NavigationAgent3D), shoot on sight (raycast 50 m, 20% accuracy far → 60% near). They fight each other too.
 - **HUD:** HP, material, ammo, players left, storm timer, crosshair
 - **Screens:** start ("Click or tap to start"), end (place, eliminations, time)
